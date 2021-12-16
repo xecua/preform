@@ -14,7 +14,13 @@ repositories {
 }
 
 dependencies { 
+    implementation("io.github.microutils:kotlin-logging-jvm:2.1.16")
+    implementation("ch.qos.logback:logback-classic:1.2.8")
+    
     implementation("com.github.sh5i:git-stein:v0.5.0")
+    
+    implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.28.0")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r")
 }
 
 
