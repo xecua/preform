@@ -7,8 +7,10 @@ import org.eclipse.jdt.core.ToolFactory
 import org.eclipse.jdt.core.formatter.CodeFormatter
 import org.eclipse.jface.text.Document
 import org.eclipse.jgit.lib.ObjectId
+import picocli.CommandLine
 import java.nio.charset.StandardCharsets
 
+@CommandLine.Command(name = "Formatter", description = ["Format all java files in same style"])
 class Format : RepositoryRewriter() {
     override fun rewriteBlob(blobId: ObjectId, c: Context): ObjectId {
         if (!c.entry.name.lowercase().endsWith(".java")) {
