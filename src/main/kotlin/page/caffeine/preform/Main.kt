@@ -1,4 +1,4 @@
-package dev.koffein.preform
+package page.caffeine.preform
 
 import jp.ac.titech.c.se.stein.Application
 

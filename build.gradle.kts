@@ -6,7 +6,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.1"
 }
 
-group = "dev.koffein"
+group = "page.caffeine"
 version = "0.0.1"
 
 repositories {
@@ -31,5 +31,5 @@ tasks.withType<KotlinCompile> {
 }
 
 application {
-    mainClass.set("dev.koffein.preform.MainKt")
+    mainClass.set("page.caffeine.preform.MainKt")
 }
