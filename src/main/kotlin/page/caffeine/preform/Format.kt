@@ -20,10 +20,12 @@ class Format : RepositoryRewriter() {
         val content = String(source.readBlob(c.entry.id, c), StandardCharsets.UTF_8)
         val formatter = ToolFactory.createCodeFormatter(null)
 
-        val formattingOperation = formatter.format(
-            CodeFormatter.K_COMPILATION_UNIT or CodeFormatter.F_INCLUDE_COMMENTS,
-            content, 0, content.length, 0, "\n"
-        )
+        val formattingOperation = try {
+            formatter.format(
+                CodeFormatter.K_COMPILATION_UNIT or CodeFormatter.F_INCLUDE_COMMENTS,
+                content, 0, content.length, 0, "\n"
+            )
+        } catch (ignore: Exception) { null }
        
         if (formattingOperation == null) {
             logger.warn("${blobId.name} was not able to format.")
