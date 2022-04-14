@@ -1,4 +1,4 @@
-package page.caffeine.preform
+package page.caffeine.preform.filters
 
 import jp.ac.titech.c.se.stein.core.Context
 import jp.ac.titech.c.se.stein.core.RepositoryRewriter
@@ -10,7 +10,6 @@ import org.eclipse.jgit.lib.ObjectId
 import picocli.CommandLine
 import java.nio.charset.StandardCharsets
 
-@CommandLine.Command(name = "Formatter", description = ["Format all java files in same style"])
 class Format : RepositoryRewriter() {
     override fun rewriteBlob(blobId: ObjectId, c: Context): ObjectId {
         if (!c.entry.name.lowercase().endsWith(".java")) {
@@ -25,8 +24,10 @@ class Format : RepositoryRewriter() {
                 CodeFormatter.K_COMPILATION_UNIT or CodeFormatter.F_INCLUDE_COMMENTS,
                 content, 0, content.length, 0, "\n"
             )
-        } catch (ignore: Exception) { null }
-       
+        } catch (ignore: Exception) {
+            null
+        }
+
         if (formattingOperation == null) {
             logger.warn("${blobId.name} was not able to format.")
             return blobId
