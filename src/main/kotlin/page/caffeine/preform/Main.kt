@@ -1,7 +1,9 @@
 package page.caffeine.preform
 
-import jp.ac.titech.c.se.stein.Application
+import picocli.CommandLine
 
 fun main(args: Array<String>) {
-    Application.execute(Format(), args)
+    val cmdline = CommandLine(Preform())
+    cmdline.setExpandAtFiles(true)
+    System.exit(cmdline.execute(*args))
 }
