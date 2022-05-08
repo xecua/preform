@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="output" path="bin/default"/>
+	<classpathentry output="bin/main" kind="src" path="src/main/kotlin">
+		<attributes>
+			<attribute name="gradle_scope" value="main"/>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-18/"/>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/io.github.microutils/kotlin-logging-jvm/2.1.16/6e0121f528ff52197257a9f382c1f616d278941b/kotlin-logging-jvm-2.1.16.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk8/1.6.0/baf82c475e9372c25407f3d132439e4aa803b8b8/kotlin-stdlib-jdk8-1.6.0.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-classic/1.2.8/22d21c4dfc77adf6f2f24bf3991846792de50b48/logback-classic-1.2.8.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/com.github.sh5i/git-stein/v0.5.0/321288b3b91685cf531dfbcc3a2049b68b28f744/git-stein-v0.5.0.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/info.picocli/picocli/4.6.2/2c4196c67c0bc65f7a86cba64787b10d61c3cc63/picocli-4.6.2.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.jdt/org.eclipse.jdt.core/3.28.0/81a39199c25c2e1d2d3c3cad4483ad7bb59496f6/org.eclipse.jdt.core-3.28.0.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.jgit/org.eclipse.jgit/6.0.0.202111291000-r/a6184d0441ad4a912f73c2f9e14f2fe3826b9306/org.eclipse.jgit-6.0.0.202111291000-r.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.6.0/da6bdc87391322974a43ccc00a25536ae74dad51/kotlin-stdlib-jdk7-1.6.0.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.6.0/a40b8b22529b733892edf4b73468ce598bb17f04/kotlin-stdlib-1.6.0.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.6.0/7857e365f925cfa060f941c1357cda1f8790502c/kotlin-stdlib-common-1.6.0.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry sourcepath="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.32/4381b152f738580aef4e436b2692a3db30609b26/slf4j-api-1.7.32-sources.jar" kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.32/cdcff33940d9f2de763bc41ea05a0be5941176c3/slf4j-api-1.7.32.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-core/1.2.8/30d9b7f26ae89e5c13ac916a832732daa8300800/logback-core-1.2.8.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.core.resources/3.16.100/6c621aff38fe8ae62dea56845cb97c8a752675ce/org.eclipse.core.resources-3.16.100.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry sourcepath="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.text/3.12.0/7911732154e2f9b7eca89f675ac60a13f4b59991/org.eclipse.text-3.12.0-sources.jar" kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.text/3.12.0/60de5d41bf523973a1ce67ed8f16f43891ef5d33/org.eclipse.text-3.12.0.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry sourcepath="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.core.expressions/3.8.100/a9afffe72df8432bf0da638be88409ea05f67352/org.eclipse.core.expressions-3.8.100-sources.jar" kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.core.expressions/3.8.100/454dcfbb7d770c486c07ec7348bf711eefed23bd/org.eclipse.core.expressions-3.8.100.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.core.runtime/3.24.100/e6542477ac91a20a337fd31b278d83817bae9c1c/org.eclipse.core.runtime-3.24.100.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.core.filesystem/1.9.300/3fb2635403c3b937d4f226b52a668efd5fa50e29/org.eclipse.core.filesystem-1.9.300.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/com.googlecode.javaewah/JavaEWAH/1.1.13/32cd724a42dc73f99ca08453d11a4bb83e0034c7/JavaEWAH-1.1.13.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.core.jobs/3.12.100/2181439661a92cc440659423dd0531e639475f17/org.eclipse.core.jobs-3.12.100.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry sourcepath="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.core.contenttype/3.8.100/b4d639914d548d54de3571c5c3a729368cded1f/org.eclipse.core.contenttype-3.8.100-sources.jar" kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.core.contenttype/3.8.100/ae9b39e290e4e6d557d0ad8cfbb278e0bfabbe16/org.eclipse.core.contenttype-3.8.100.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry sourcepath="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.equinox.app/1.6.100/695abd0650bdd3d173bf4065ecb6c6fdac7f5301/org.eclipse.equinox.app-1.6.100-sources.jar" kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.equinox.app/1.6.100/9553009ca914f20ef2da4909922d58c6b14dc7a6/org.eclipse.equinox.app-1.6.100.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry sourcepath="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.equinox.registry/3.11.100/a7bcd6b9b21ba7169b9617342e72eb3b88b5e30c/org.eclipse.equinox.registry-3.11.100-sources.jar" kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.equinox.registry/3.11.100/713133f26871cc548cc28d013b35af051a0bb10c/org.eclipse.equinox.registry-3.11.100.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry sourcepath="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.equinox.preferences/3.9.100/3eb67f2874ee2f89311133609d3fc880e287ea2c/org.eclipse.equinox.preferences-3.9.100-sources.jar" kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.equinox.preferences/3.9.100/7ecb53af1b8056be97390f186477acb58f8a6db2/org.eclipse.equinox.preferences-3.9.100.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry sourcepath="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.core.commands/3.10.100/95a377af33cbf14a8649607c6194ef974272bdfc/org.eclipse.core.commands-3.10.100-sources.jar" kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.core.commands/3.10.100/e6ab3335ea6918b4d73ee1b78a302248eaed4670/org.eclipse.core.commands-3.10.100.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.equinox.common/3.16.0/c067f66c5c18d46abfa55cb7e023851575405c78/org.eclipse.equinox.common-3.16.0.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.eclipse.platform/org.eclipse.osgi/3.17.200/bf6a0bad9e934801d8c3efaa7ff80aa584a16b32/org.eclipse.osgi-3.17.200.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/13.0/919f0dfe192fb4e063e7dacadee7f8bb9a2672a9/annotations-13.0.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.jgrapht/jgrapht-core/1.3.1/2a60359a72bea12c2336400408cebd0254b63be/jgrapht-core-1.3.1.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.8.6/9180733b7df8542621dc12e21e87557e8c99b8cb/gson-2.8.6.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.6/815893df5f31da2ece4040fe0a12fd44b577afaf/commons-io-2.6.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.9/122c7cee69b53ed4a7681c03d4ee4c0e2765da5/commons-lang3-3.9.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/xecua/.gradle/caches/modules-2/files-2.1/org.jheaps/jheaps/0.10/4a85245d16284f555e94dd2a05b6de377f542e9a/jheaps-0.10.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+</classpath>
