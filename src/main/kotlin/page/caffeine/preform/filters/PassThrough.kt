@@ -5,10 +5,10 @@ import mu.KotlinLogging
 
 class PassThrough : RepositoryRewriter() {
     init {
-        log.info { "PassThrough" }
+        logger.info { "PassThrough" }
     }
 
     companion object {
-        private val log = KotlinLogging.logger {}
+        private val logger = KotlinLogging.logger {}
     }
 }
