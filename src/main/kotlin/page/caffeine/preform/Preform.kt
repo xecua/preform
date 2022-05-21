@@ -9,6 +9,9 @@ import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import page.caffeine.preform.filters.Format
+import page.caffeine.preform.filters.Linebreak
+import page.caffeine.preform.filters.PassThrough
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.ITypeConverter
@@ -21,13 +24,18 @@ import java.util.function.BiConsumer
 @Command(
     name = "preform",
     subcommandsRepeatable = true,
+    subcommands = [
+        Format::class,
+        PassThrough::class,
+        Linebreak::class
+    ]
 )
 class Preform : Callable<Int> {
     @Parameters(index = "0", paramLabel = "<repo>", description = ["Source repository path"])
     lateinit var source: File
 
-    @Parameters(index = "1", paramLabel = "<filter>", description = ["Using filter"], arity="1..*")
-    lateinit var filters: List<String>
+    // @Parameters(index = "1", paramLabel = "<filter>", description = ["Using filter"], arity="1..*")
+    var filters: MutableList<RepositoryRewriter> = mutableListOf()
 
     @ArgGroup(exclusive = false, multiplicity = "0..1")
     var output: OutputOptions? = null
@@ -85,8 +93,6 @@ class Preform : Callable<Int> {
     )
     var versionInfoRequested = false
 
-    val loader = Loader<RepositoryRewriter>()
-
     private fun setLoggerLevel(name: String, level: Level) {
         val logger = LoggerFactory.getLogger(name) as ch.qos.logback.classic.Logger
         logger.level = level
@@ -101,21 +107,15 @@ class Preform : Callable<Int> {
 
         openRepositories { source, target ->
             // とりあえず順番に?
+            // TODO: 最後以外は一時ディレクトリに退避する
             filters.forEach {
-                val filter = loader.load(it)
-                if (filter == null) {
-                    log.warn { "Filter $it was not found. Skipping." }
-                    return@forEach
-                }
-
-                filter.initialize(source, target)
+                it.initialize(source, target)
                 log.info { "Start rewriting by $it, ${source.directory} -> ${target.directory}" }
                 val c = Context.init()
-                filter.rewrite(c)
-
+                it.rewrite(c)
             }
         }
-        
+
         return 0
     }
 
