@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 import page.caffeine.preform.filters.Format
 import page.caffeine.preform.filters.Linebreak
 import page.caffeine.preform.filters.PassThrough
+import page.caffeine.preform.filters.QuickRemedyMarker
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.ITypeConverter
@@ -27,7 +28,8 @@ import java.util.function.BiConsumer
     subcommands = [
         Format::class,
         PassThrough::class,
-        Linebreak::class
+        Linebreak::class,
+        QuickRemedyMarker::class
     ]
 )
 class Preform : Callable<Int> {
