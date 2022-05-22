@@ -9,38 +9,26 @@ import java.time.Duration
 
 @Command(name = "QuickRemedyMarker", description = ["Mark Quick Remedy Commits."])
 class QuickRemedyMarker : RepositoryRewriter() {
-    // detector
-    var previousCommit: RevCommit? = null
-
     override fun rewriteCommitMessage(message: String?, c: Context?): String {
-        val commit = c?.commit
-        if (commit == null) {
-            previousCommit = null
-            return super.rewriteCommitMessage(message, c)
-        }
+        val commit = c?.commit ?: return super.rewriteCommitMessage(message, c)
 
         // of course, quick remedy commit is not merge commit
         if (commit.parentCount != 1) {
-            previousCommit = commit
             return super.rewriteCommitMessage(message, c)
         }
 
         // 1: done by same author as the parent commit
         val commitAuthor = commit.authorIdent
         if (commitAuthor == null) {
-            previousCommit = commit
             return super.rewriteCommitMessage(message, c)
         }
-        
-        val parentAuthor =
-            (target.parseAny(commit.getParent(0), c) as? RevCommit)?.authorIdent
+
+        val parentAuthor = (target.parseAny(commit.getParent(0), c) as? RevCommit)?.authorIdent
         if (parentAuthor == null) {
-            previousCommit = commit
             return super.rewriteCommitMessage(message, c)
         }
-        
+
         if (commitAuthor.name != parentAuthor.name) {
-            previousCommit = commit
             return super.rewriteCommitMessage(message, c)
         }
 
