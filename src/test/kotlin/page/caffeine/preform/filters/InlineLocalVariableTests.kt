@@ -21,29 +21,6 @@ class InlineLocalVariableTests : FunSpec({
             )
         }
 
-        test("in case there are many use") {
-            it.rewriteContent(
-                """
-                class A {
-                    void bar() {
-                        int i = 1 + 2 - 3 * 4;
-                        foi(i);
-                        bar(i);
-                    }
-                }
-                """.trimIndent()
-            ).shouldBe(
-                """
-                class A {
-                    void bar() {
-                        int i = 1 + 2 - 3 * 4;
-                        foi(i);
-                        bar(i);
-                    }
-                }
-                """.trimIndent() // 空白とかもそのまま置換される: formatting推奨?
-            )
-        }
         test("outside method") {
             it.rewriteContent(
                 """
