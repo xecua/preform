@@ -52,21 +52,30 @@ class InlineLocalVariable : RepositoryRewriter() {
         val parser = generateParser()
         parser.setSource(content.toCharArray())
         val tree = generateParser().createAST(null) as CompilationUnit
-        val visitor = LocalVariableVisitor(content)
+        val visitor = LocalVariableVisitor(content, tree)
         tree.accept(visitor)
-        return visitor.rewrittenContent
+        return visitor.getRewrittenContent()
     }
 
 }
 
-class LocalVariableVisitor(private val content: String) : ASTVisitor() {
+class LocalVariableVisitor(
+    private val content: String,
+    rootNode: CompilationUnit
+) : ASTVisitor() {
     private var isInsideMethod = false
     private val variableDefUse = mutableMapOf<String, DefUse>()
     private var definingStmt: VariableDeclarationStatement? = null
     private var definedVarName: String? = null
     private var currentStatement: Statement? = null
-    var rewrittenContent: String? = null
-        private set
+    private var astRewrite: ASTRewrite = ASTRewrite.create(rootNode.ast)
+
+    fun getRewrittenContent(): String {
+        val doc = Document(content)
+        val edits = astRewrite.rewriteAST(doc, null)
+        edits.apply(doc)
+        return doc.get() ?: content
+    }
 
     override fun visit(node: MethodDeclaration): Boolean {
         variableDefUse.clear()
@@ -75,22 +84,16 @@ class LocalVariableVisitor(private val content: String) : ASTVisitor() {
     }
 
     override fun endVisit(node: MethodDeclaration) {
-        variableDefUse.forEach { (name, usage) ->
+        variableDefUse.forEach { (_, usage) ->
             if (usage.allAppearances.size == 1) {
                 // 直後の文で一回だけ使われた
                 @Suppress("UNCHECKED_CAST")
                 val replacingExpr = (usage.def.fragments() as List<VariableDeclarationFragment>).last()
                 if (usage.def.fragments().size == 1) {
-                    usage.def.delete()
+                    astRewrite.remove(usage.def, null)
                 }
-                val astRewriter = ASTRewrite.create(usage.rightAfterUse.statement.ast)
-                val replacing = astRewriter.createCopyTarget(replacingExpr.initializer)
-                astRewriter.replace(usage.rightAfterUse.usage, replacing, null)
-
-                val sourceDoc = Document(content)
-                val edits = astRewriter.rewriteAST(sourceDoc, null)
-                edits.apply(sourceDoc)
-                rewrittenContent = sourceDoc.get()
+                val replacing = astRewrite.createCopyTarget(replacingExpr.initializer)
+                astRewrite.replace(usage.rightAfterUse.usage, replacing, null)
             }
         }
 
