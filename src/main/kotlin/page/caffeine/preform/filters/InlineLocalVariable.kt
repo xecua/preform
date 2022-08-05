@@ -37,21 +37,20 @@ import page.caffeine.preform.utils.generateParser
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
 
-// TODO: テストを書く
 @Command(name = "InlineLocalVariable", description = ["Revert Local variable extraction by inlining it"])
 class InlineLocalVariable : RepositoryRewriter() {
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {
         // 直後の一文のみで使われているローカル変数の宣言を見つける
         val content = String(source.readBlob(blobId, c), StandardCharsets.UTF_8)
-        val afterContent = rewriteContent(content) ?: return super.rewriteBlob(blobId, c)
+        val afterContent = rewriteContent(content)
 
         return target.writeBlob(afterContent.toByteArray(), c)
     }
 
-    fun rewriteContent(content: String): String? {
+    internal fun rewriteContent(content: String): String {
         val parser = generateParser()
         parser.setSource(content.toCharArray())
-        val tree = generateParser().createAST(null) as CompilationUnit
+        val tree = parser.createAST(null) as CompilationUnit
         val visitor = LocalVariableVisitor(content, tree)
         tree.accept(visitor)
         return visitor.getRewrittenContent()
