@@ -22,6 +22,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.11")
 
     implementation("com.github.sh5i:git-stein:v0.5.0")
+    implementation("com.github.YoshikiHigo:CommentRemover:v0.1.1")
 
     implementation("info.picocli:picocli:4.6.3")
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.29.0")
