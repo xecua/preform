@@ -1,7 +1,7 @@
 package page.caffeine.preform.filters
 
 import jp.ac.titech.c.se.stein.core.Context
-import jp.ac.titech.c.se.stein.core.RepositoryRewriter
+import page.caffeine.preform.utils.RepositoryRewriter
 import org.eclipse.jdt.core.dom.ASTVisitor
 import org.eclipse.jdt.core.dom.AssertStatement
 import org.eclipse.jdt.core.dom.BreakStatement

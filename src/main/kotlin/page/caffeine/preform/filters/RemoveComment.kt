@@ -1,7 +1,7 @@
 package page.caffeine.preform.filters
 
 import jp.ac.titech.c.se.stein.core.Context
-import jp.ac.titech.c.se.stein.core.RepositoryRewriter
+import page.caffeine.preform.utils.RepositoryRewriter
 import org.eclipse.jgit.lib.ObjectId
 import picocli.CommandLine
 import java.nio.charset.StandardCharsets

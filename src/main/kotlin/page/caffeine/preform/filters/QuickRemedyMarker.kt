@@ -1,7 +1,7 @@
 package page.caffeine.preform.filters
 
 import jp.ac.titech.c.se.stein.core.Context
-import jp.ac.titech.c.se.stein.core.RepositoryRewriter
+import page.caffeine.preform.utils.RepositoryRewriter
 import mu.KotlinLogging
 import org.eclipse.jgit.revwalk.RevCommit
 import picocli.CommandLine.Command

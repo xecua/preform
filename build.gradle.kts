@@ -21,7 +21,7 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.23")
     implementation("ch.qos.logback:logback-classic:1.2.11")
 
-    implementation("com.github.sh5i:git-stein:ad6bc7e8e2")
+    implementation("com.github.sh5i:git-stein:v0.5.0")
 
     implementation("info.picocli:picocli:4.6.3")
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.29.0")

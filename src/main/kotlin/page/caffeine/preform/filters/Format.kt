@@ -1,12 +1,12 @@
 package page.caffeine.preform.filters
 
 import jp.ac.titech.c.se.stein.core.Context
-import jp.ac.titech.c.se.stein.core.RepositoryRewriter
 import mu.KotlinLogging
 import org.eclipse.jdt.core.ToolFactory
 import org.eclipse.jdt.core.formatter.CodeFormatter
 import org.eclipse.jface.text.Document
 import org.eclipse.jgit.lib.ObjectId
+import page.caffeine.preform.utils.RepositoryRewriter
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
 
