@@ -10,9 +10,11 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import page.caffeine.preform.filters.Format
+import page.caffeine.preform.filters.InlineLocalVariable
 import page.caffeine.preform.filters.Linebreak
 import page.caffeine.preform.filters.PassThrough
 import page.caffeine.preform.filters.QuickRemedyMarker
+import page.caffeine.preform.filters.RemoveComment
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.ITypeConverter
@@ -29,7 +31,9 @@ import java.util.function.BiConsumer
         Format::class,
         PassThrough::class,
         Linebreak::class,
-        QuickRemedyMarker::class
+        QuickRemedyMarker::class,
+        InlineLocalVariable ::class,
+        RemoveComment::class
     ]
 )
 class Preform : Callable<Int> {
