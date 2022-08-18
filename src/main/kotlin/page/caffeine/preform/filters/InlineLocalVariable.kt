@@ -157,7 +157,7 @@ class LocalVariableVisitor(
     // ReturnStatement
     override fun visit(node: ReturnStatement): Boolean {
         currentStatement = node
-        node.expression.accept(this)
+        node.expression?.accept(this)
         return false
     }
 
@@ -192,7 +192,7 @@ class LocalVariableVisitor(
     // SuperConstructorInvocation
     override fun visit(node: SuperConstructorInvocation): Boolean {
         currentStatement = node
-        node.expression.accept(this)
+        node.expression?.accept(this)
         node.arguments().forEach { (it as Expression).accept(this) }
         return false
     }
