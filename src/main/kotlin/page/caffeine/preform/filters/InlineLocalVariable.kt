@@ -203,6 +203,10 @@ class LocalVariableVisitor(
 
     // Identifier
     override fun visit(node: SimpleName): Boolean {
+        if (!isInsideMethod) {
+            return false
+        }
+        
         val name = node.identifier
         // 位置情報はstartPositionとgetLengthで手に入りはする
         // locationInParentは親より上のノードでも使えるのだろうか……
