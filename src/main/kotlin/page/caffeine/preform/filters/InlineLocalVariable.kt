@@ -103,9 +103,11 @@ class LocalVariableVisitor(
         @Suppress("UNCHECKED_CAST")
         val expr = (node.fragments() as List<VariableDeclarationFragment>).last()
 
-        // initializeしている場合のみ?
-        definedVarName = expr.name.toString() // 最低1つは宣言している変数がある
-        definingStmt = node
+        // 初期化してないと意味ない
+        if (expr.initializer != null) {
+            definedVarName = expr.name.toString()
+            definingStmt = node
+        }
 
         return false
     }
