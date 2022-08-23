@@ -44,32 +44,30 @@ class JavaCommentRemover {
             }
 
             if (t == ITerminalSymbols.TokenNameCOMMENT_LINE) {
-                // 行コメント: 改行文字がコメントに含まれている
                 val currentLineNo = scanner.getLineNumber(scanner.currentTokenStartPosition)
-                val currentLineEndPos = scanner.getLineEnd(currentLineNo)
-                // scanner.getLineEnd: 改行に遭遇していない、あるいはこのファイルに改行が存在しないと-1になる(APIの仕様にはないが……)
-                if (currentLineEndPos >= 0) {
-                    val previousLineEndPos = if (currentLineNo >= 2) scanner.getLineEnd(currentLineNo - 1) else -1
-                    // 現在の行のコメントまでの要素: 空白だけだったらその行をなかったことにする(というか改行を追加しない)
-                    val currentLine = content.substring(previousLineEndPos + 1 until scanner.currentTokenStartPosition)
-                    if (currentLine.isNotBlank()) {
-                        dest.append(
-                            if (currentLineEndPos == 0 || content[currentLineEndPos - 1] != '\r') {
-                                "\n"
-                            } else {
-                                "\r\n"
-                            }
-
-                        )
+                val currentLineStartPos = if (currentLineNo == 1) 0 else scanner.getLineStart(currentLineNo)
+                val currentLineContent = content.substring(currentLineStartPos until scanner.currentTokenStartPosition)
+                if (currentLineContent.isBlank()) {
+                    // 現在の行のコメントまでの要素が空白だけだったらその行をなかったことにする
+                    dest.setLength(dest.length - currentLineContent.length)
+                } else {
+                    // コメントまでになんかあったら改行入れる(行コメントは改行文字も含むので)
+                    if (content[scanner.currentTokenEndPosition - 1] == '\n') {
+                        if (content[scanner.currentTokenEndPosition - 2] == '\r') {
+                            dest.append("\r\n")
+                        } else {
+                            dest.append("\n")
+                        }
                     }
                 }
             } else if (t == ITerminalSymbols.TokenNameCOMMENT_BLOCK || t == ITerminalSymbols.TokenNameCOMMENT_JAVADOC) {
                 // 開始行のコメントまでが空白、かつ終了行のコメント以降が空白なら消す
                 val commentStartPos = scanner.currentTokenStartPosition
                 val commentStartingLineNo = scanner.getLineNumber(commentStartPos)
-                val commentStartingLineStartPos = scanner.getLineStart(commentStartingLineNo)
+                val commentStartingLineStartPos =
+                    if (commentStartingLineNo == 1) 0 else scanner.getLineStart(commentStartingLineNo)
                 // 改行に遭遇してないとcommentStartingLineStartPos(というかlinePtr)が-1になるっぽい
-                val startingLineContent = if (commentStartingLineNo == 1) "" else content.substring(
+                val startingLineContent = content.substring(
                     commentStartingLineStartPos until commentStartPos
                 )
 
