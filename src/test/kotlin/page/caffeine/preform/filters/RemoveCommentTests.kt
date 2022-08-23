@@ -12,12 +12,13 @@ class RemoveCommentTests : FunSpec({
             // a
             // b
             int i = 0;
-            /* multiple
+                /* multiple
              * lines
              * comment */
             /* a */ int j = 1; /* b */
             String foo = "foo"; // after comment
             String bar = "bar";
+                /* po */
             """.trimIndent()
             // comment in last line
         ).shouldBe(
@@ -26,10 +27,11 @@ class RemoveCommentTests : FunSpec({
              int j = 1; 
             String foo = "foo"; 
             String bar = "bar";
+            
             """.trimIndent()
         )
         // 注: コメントによって消滅した行を消すことはできるが、
-        // コメントの前後の空白を取り除くことはできない
+        // コメントの前後の空白を取り除くことはできない(そのため、Formatの実行を推奨)
         // また、最後にコメントがあった場合、その前の行の改行文字は残る
         it.rewriteContent(
             """
