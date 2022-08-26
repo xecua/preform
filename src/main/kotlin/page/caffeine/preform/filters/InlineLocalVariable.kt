@@ -1,38 +1,28 @@
 package page.caffeine.preform.filters
 
 import jp.ac.titech.c.se.stein.core.Context
-import page.caffeine.preform.utils.RepositoryRewriter
+import jp.ac.titech.c.se.stein.core.EntrySet
+import org.eclipse.jdt.core.dom.ASTNode
 import org.eclipse.jdt.core.dom.ASTVisitor
 import org.eclipse.jdt.core.dom.AssertStatement
-import org.eclipse.jdt.core.dom.BreakStatement
 import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.core.dom.ConstructorInvocation
-import org.eclipse.jdt.core.dom.ContinueStatement
-import org.eclipse.jdt.core.dom.DoStatement
-import org.eclipse.jdt.core.dom.EmptyStatement
-import org.eclipse.jdt.core.dom.EnhancedForStatement
-import org.eclipse.jdt.core.dom.Expression
 import org.eclipse.jdt.core.dom.ExpressionStatement
-import org.eclipse.jdt.core.dom.ForStatement
 import org.eclipse.jdt.core.dom.IfStatement
 import org.eclipse.jdt.core.dom.MethodDeclaration
 import org.eclipse.jdt.core.dom.QualifiedName
 import org.eclipse.jdt.core.dom.ReturnStatement
 import org.eclipse.jdt.core.dom.SimpleName
-import org.eclipse.jdt.core.dom.Statement
 import org.eclipse.jdt.core.dom.SuperConstructorInvocation
-import org.eclipse.jdt.core.dom.SwitchCase
 import org.eclipse.jdt.core.dom.SwitchStatement
-import org.eclipse.jdt.core.dom.SynchronizedStatement
 import org.eclipse.jdt.core.dom.ThrowStatement
 import org.eclipse.jdt.core.dom.TryStatement
-import org.eclipse.jdt.core.dom.TypeDeclarationStatement
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement
-import org.eclipse.jdt.core.dom.WhileStatement
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite
 import org.eclipse.jface.text.Document
 import org.eclipse.jgit.lib.ObjectId
+import page.caffeine.preform.utils.RepositoryRewriter
 import page.caffeine.preform.utils.generateParser
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
@@ -40,6 +30,12 @@ import java.nio.charset.StandardCharsets
 @Command(name = "InlineLocalVariable", description = ["Revert Local variable extraction by inlining it"])
 class InlineLocalVariable : RepositoryRewriter() {
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {
+        val fileName =
+            (c?.get(Context.Key.entry) as? EntrySet.Entry)?.name?.lowercase() ?: return super.rewriteBlob(blobId, c)
+        if (!fileName.endsWith(".java")) {
+            return super.rewriteBlob(blobId, c)
+        }
+
         // 直後の一文のみで使われているローカル変数の宣言を見つける
         val content = String(source.readBlob(blobId, c), StandardCharsets.UTF_8)
         val afterContent = rewriteContent(content)
@@ -64,9 +60,16 @@ class LocalVariableVisitor(
 ) : ASTVisitor() {
     private var isInsideMethod = false
     private val variableDefUse = mutableMapOf<String, DefUse>()
+
+    // if the last statement is variable declaration
     private var definingStmt: VariableDeclarationStatement? = null
+
+    // name of variable in `definingStmt`
     private var definedVarName: String? = null
-    private var currentStatement: Statement? = null
+
+    // whether currentStatement is suitable for replacement
+    private var canReplace = false
+
     private var astRewrite: ASTRewrite = ASTRewrite.create(rootNode.ast)
 
     fun getRewrittenContent(): String {
@@ -79,12 +82,13 @@ class LocalVariableVisitor(
     override fun visit(node: MethodDeclaration): Boolean {
         variableDefUse.clear()
         isInsideMethod = true
-        return true
+        node.body?.accept(this)
+        return false
     }
 
     override fun endVisit(node: MethodDeclaration) {
         variableDefUse.forEach { (_, usage) ->
-            if (usage.allAppearances.size == 1) {
+            if (usage.appearanceCount == 1) {
                 // 直後の文で一回だけ使われた
                 @Suppress("UNCHECKED_CAST")
                 val replacingExpr = (usage.def.fragments() as List<VariableDeclarationFragment>).last()
@@ -92,7 +96,7 @@ class LocalVariableVisitor(
                     astRewrite.remove(usage.def, null)
                 }
                 val replacing = astRewrite.createCopyTarget(replacingExpr.initializer)
-                astRewrite.replace(usage.rightAfterUse.usage, replacing, null)
+                astRewrite.replace(usage.rightAfterUse, replacing, null)
             }
         }
 
@@ -114,93 +118,112 @@ class LocalVariableVisitor(
 
     // AssertStatement
     override fun visit(node: AssertStatement): Boolean {
-        currentStatement = node
-        node.expression.accept(this)
-        return false
-    }
+        canReplace = true
+        node.expression?.accept(this)
+        canReplace = true
 
-    override fun endVisit(node: AssertStatement) {
-        endVisitStatement()
+        clearPreviousStatement()
+        return false
     }
 
     // IfStatement
     override fun visit(node: IfStatement): Boolean {
-        currentStatement = node
-        node.expression.accept(this)
-        return false
-    }
+        canReplace = true
+        node.expression?.accept(this)
+        canReplace = false
+        clearPreviousStatement()
 
-    override fun endVisit(node: IfStatement) {
-        endVisitStatement()
+        node.thenStatement?.accept(this)
+        node.elseStatement?.accept(this)
+
+        return false
+
     }
 
     // SwitchStatement
     override fun visit(node: SwitchStatement): Boolean {
-        currentStatement = node
+        canReplace = true
         node.expression.accept(this)
-        return false
-    }
+        canReplace = false
+        clearPreviousStatement()
 
-    override fun endVisit(node: SwitchStatement) {
-        endVisitStatement()
+        // node.statements().forEach { it.accept(this) }
+
+        return false
     }
 
     // ExpressionStatement
     override fun visit(node: ExpressionStatement): Boolean {
-        currentStatement = node
+        canReplace = true
         node.expression.accept(this)
-        return false
-    }
+        canReplace = false
 
-    override fun endVisit(node: ExpressionStatement) {
-        endVisitStatement()
+        clearPreviousStatement()
+        return false
     }
 
     // ReturnStatement
     override fun visit(node: ReturnStatement): Boolean {
-        currentStatement = node
+        canReplace = true
         node.expression?.accept(this)
-        return false
-    }
+        canReplace = false
 
-    override fun endVisit(node: ReturnStatement) {
-        endVisitStatement()
+        clearPreviousStatement()
+        return false
     }
 
     // ThrowStatement
     override fun visit(node: ThrowStatement): Boolean {
-        currentStatement = node
+        canReplace = true
         node.expression.accept(this)
-        return false
-    }
+        canReplace = false
 
-    override fun endVisit(node: ThrowStatement) {
-        endVisitStatement()
+        clearPreviousStatement()
+        return false
     }
 
 
     // ConstructorInvocation
     override fun visit(node: ConstructorInvocation): Boolean {
         // expressionの一部という感じがする?
-        currentStatement = node
-        node.arguments().forEach { (it as Expression).accept(this) }
-        return false
-    }
+        canReplace = true
+        // 第1引数だけ? (すでにカウントが1ならそもそも使われないのでいいか)
+        node.arguments().forEach { (it as ASTNode).accept(this) }
+        canReplace = false
 
-    override fun endVisit(node: ConstructorInvocation) {
-        endVisitStatement()
+        clearPreviousStatement()
+        return false
     }
 
     // SuperConstructorInvocation
     override fun visit(node: SuperConstructorInvocation): Boolean {
-        currentStatement = node
-        node.expression?.accept(this)
-        node.arguments().forEach { (it as Expression).accept(this) }
+        canReplace = true
+        if (node.expression != null) {
+            node.expression.accept(this)
+            canReplace = false
+        }
+        node.arguments().forEach { (it as ASTNode).accept(this) }
+        canReplace = false
+        clearPreviousStatement()
         return false
     }
 
-    override fun endVisit(node: SuperConstructorInvocation) {
-        endVisitStatement()
+    // TryStatement
+    override fun visit(node: TryStatement): Boolean {
+        canReplace = true
+        if (node.resources().isNotEmpty()) {
+            node.resources().forEach { (it as ASTNode).accept(this) }
+            canReplace = false
+        }
+        // 1文目が終わった時点でclearPreviousStatementが呼ばれる(はず)
+        node.body?.statements()?.forEach { (it as ASTNode).accept(this) }
+        canReplace = false
+
+        node.catchClauses()?.forEach { (it as ASTNode).accept(this) }
+        node.finally?.accept(this)
+
+        clearPreviousStatement()
+        return false
     }
 
     // Identifier
@@ -208,114 +231,34 @@ class LocalVariableVisitor(
         if (!isInsideMethod) {
             return false
         }
-        
+
         val name = node.identifier
-        // 位置情報はstartPositionとgetLengthで手に入りはする
-        // locationInParentは親より上のノードでも使えるのだろうか……
-
-
-        // 直前の文で宣言したローカル変数と名前が一致した: mapに追加する
-        if (definedVarName == name) {
-            variableDefUse.putIfAbsent(name, DefUse(definingStmt!!, Use(currentStatement!!, node), mutableListOf()))
-
+        // 直前の文で宣言したローカル変数と名前が一致した
+        if (definedVarName == name && canReplace) {
+            variableDefUse.putIfAbsent(name, DefUse(definingStmt!!, node, 0))
         }
 
-        // ローカル変数ならmapに存在するので、追加する
-        variableDefUse[name]?.allAppearances?.add(Use(currentStatement!!, node))
+        variableDefUse[name]?.let {
+            it.appearanceCount += 1
+        }
 
         return false
     }
 
     override fun visit(node: QualifiedName?): Boolean {
-        // Name -> QualifiedNameを防止: SimpleNameだけを見るように
+        // Name -> QualifiedName -> SimpleName を防止
         return false
     }
 
-    // TryStatement
-    override fun visit(node: TryStatement): Boolean {
-        currentStatement = node
 
-        if (node.resources().isEmpty()) {
-            // resourcesがない: bodyの最初の1文を判定に使う(ほんまか)
-            node.body.statements().firstOrNull()?.let {
-                (it as Statement).accept(this)
-            }
-        } else {
-            node.resources().forEach { (it as Expression).accept(this) }
-        }
-
-        return false
-    }
-
-    override fun endVisit(node: TryStatement) {
-        endVisitStatement()
-    }
-
-    // Ignoring
-    override fun visit(node: DoStatement): Boolean {
-        endVisitStatement()
-        return false
-    }
-
-    override fun visit(node: ForStatement): Boolean {
-        endVisitStatement()
-        return false
-    }
-
-    override fun visit(node: WhileStatement): Boolean {
-        endVisitStatement()
-        return false
-    }
-
-    override fun visit(node: EnhancedForStatement): Boolean {
-        endVisitStatement()
-        return false
-    }
-
-    override fun visit(node: SwitchCase): Boolean {
-        endVisitStatement()
-        return false
-    }
-
-    override fun visit(node: SynchronizedStatement): Boolean {
-        endVisitStatement()
-        return false
-    }
-
-    override fun visit(node: TypeDeclarationStatement): Boolean {
-        endVisitStatement()
-        return false
-    }
-
-    override fun visit(node: BreakStatement): Boolean {
-        endVisitStatement()
-        return false
-    }
-
-    override fun visit(node: ContinueStatement): Boolean {
-        endVisitStatement()
-        return false
-    }
-
-    override fun visit(node: EmptyStatement): Boolean {
-        endVisitStatement()
-        return false
-    }
-
-    private fun endVisitStatement() {
-        currentStatement = null
+    private fun clearPreviousStatement() {
         definedVarName = null
         definingStmt = null
     }
 }
 
-data class Use(
-    val statement: Statement,
-    val usage: SimpleName
-)
-
 data class DefUse(
     val def: VariableDeclarationStatement,
-    var rightAfterUse: Use,
-    val allAppearances: MutableList<Use>
+    var rightAfterUse: SimpleName,
+    var appearanceCount: Int
 )
