@@ -26,7 +26,7 @@ class TrivialKeywordTests : FunSpec({
                 """.trimIndent()
             )
         }
-        
+
         test("already exist non-empty constructor call") {
             it.rewriteContent(
                 """

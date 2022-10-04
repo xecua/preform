@@ -18,7 +18,10 @@ import picocli.CommandLine
 import picocli.CommandLine.Option
 import java.nio.charset.StandardCharsets
 
-@CommandLine.Command(name = "FullQualifier", description = ["Fully-Qualify class names, keywords, etc."])
+@CommandLine.Command(
+    name = "FullQualifier",
+    description = ["Fully-Qualify class names, keywords, etc."]
+)
 class TrivialKeyword : RepositoryRewriter() {
     // ループ末尾のcontinue: 入らないよな……
     @Option(names = ["--keyword"], description = ["Apply keyword supplementation. Default: \${DEFAULT-VALUE}"])
@@ -50,10 +53,7 @@ class TrivialKeyword : RepositoryRewriter() {
     }
 }
 
-class TrivialKeywordVisitor(
-    private val content: String,
-    rootNode: CompilationUnit
-) : ASTVisitor() {
+class TrivialKeywordVisitor(private val content: String, rootNode: CompilationUnit) : ASTVisitor() {
     private var astRewrite = ASTRewrite.create(rootNode.ast)
 
     fun getRewrittenContent(): String {
@@ -64,13 +64,11 @@ class TrivialKeywordVisitor(
     }
 
     override fun visit(node: MethodDeclaration): Boolean {
+        val body = node.body
+        @Suppress("UNCHECKED_CAST") val statements = body.statements() as List<Statement>
+
         // Redundant default super constructor invocation
         if (node.isConstructor) {
-            val body = node.body
-
-            @Suppress("UNCHECKED_CAST")
-            val statements = body.statements() as List<Statement>
-
             if (statements.isNotEmpty()) {
                 val first = statements.first()
                 if (first.nodeType == ASTNode.SUPER_CONSTRUCTOR_INVOCATION) {
@@ -80,15 +78,12 @@ class TrivialKeywordVisitor(
             }
         } else {
             // return type become null when this is constructor
-            
+
             // Redundant return statement in void methods
             if (node.returnType2.isPrimitiveType &&
-                (node.returnType2 as PrimitiveType).primitiveTypeCode == PrimitiveType.VOID
+                (node.returnType2 as PrimitiveType).primitiveTypeCode ==
+                PrimitiveType.VOID
             ) {
-                val body = node.body
-
-                @Suppress("UNCHECKED_CAST")
-                val statements = body.statements() as List<Statement>
                 if (statements.isNotEmpty()) {
                     val last = statements.last()
                     if (last.nodeType == ASTNode.RETURN_STATEMENT) {
