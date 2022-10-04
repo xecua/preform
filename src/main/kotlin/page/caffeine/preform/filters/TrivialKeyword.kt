@@ -6,8 +6,14 @@ import org.eclipse.jdt.core.dom.ASTNode
 import org.eclipse.jdt.core.dom.ASTVisitor
 import org.eclipse.jdt.core.dom.Block
 import org.eclipse.jdt.core.dom.CompilationUnit
+import org.eclipse.jdt.core.dom.FieldAccess
+import org.eclipse.jdt.core.dom.IMethodBinding
+import org.eclipse.jdt.core.dom.IVariableBinding
 import org.eclipse.jdt.core.dom.MethodDeclaration
+import org.eclipse.jdt.core.dom.MethodInvocation
 import org.eclipse.jdt.core.dom.PrimitiveType
+import org.eclipse.jdt.core.dom.QualifiedName
+import org.eclipse.jdt.core.dom.SimpleName
 import org.eclipse.jdt.core.dom.Statement
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite
 import org.eclipse.jface.text.Document
@@ -15,7 +21,6 @@ import org.eclipse.jgit.lib.ObjectId
 import page.caffeine.preform.utils.RepositoryRewriter
 import page.caffeine.preform.utils.generateParser
 import picocli.CommandLine
-import picocli.CommandLine.Option
 import java.nio.charset.StandardCharsets
 
 @CommandLine.Command(
@@ -23,16 +28,19 @@ import java.nio.charset.StandardCharsets
     description = ["Fully-Qualify class names, keywords, etc."]
 )
 class TrivialKeyword : RepositoryRewriter() {
-    // ループ末尾のcontinue: 入らないよな……
-    @Option(names = ["--keyword"], description = ["Apply keyword supplementation. Default: \${DEFAULT-VALUE}"])
-    private var applyToKeywords: Boolean = true
+    // @Option(
+    //     names = ["--keyword"],
+    //     description = ["Apply keyword supplementation. Default: \${DEFAULT-VALUE}"]
+    // )
+    // private var applyToKeywords: Boolean = true
 
     // @Option(names= [ "--idents"], description = ["Make identifiers fully-qualified"])
     // private var applyToIdents: Boolean = true
 
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {
         val fileName =
-            (c?.get(Context.Key.entry) as? EntrySet.Entry)?.name?.lowercase() ?: return super.rewriteBlob(blobId, c)
+            (c?.get(Context.Key.entry) as? EntrySet.Entry)?.name?.lowercase()
+                ?: return super.rewriteBlob(blobId, c)
         if (!fileName.endsWith(".java")) {
             return super.rewriteBlob(blobId, c)
         }
@@ -45,7 +53,10 @@ class TrivialKeyword : RepositoryRewriter() {
     fun rewriteContent(content: String): String {
         val parser = generateParser()
         parser.setSource(content.toCharArray())
-        // parser.setResolveBindings(true)
+        parser.setResolveBindings(true)
+        parser.setBindingsRecovery(true)
+        parser.setStatementsRecovery(true)
+        parser.setUnitName("") // setting non-null make resolution work within file
         val tree = parser.createAST(null) as CompilationUnit
         val visitor = TrivialKeywordVisitor(content, tree)
         tree.accept(visitor)
@@ -92,8 +103,40 @@ class TrivialKeywordVisitor(private val content: String, rootNode: CompilationUn
                     }
                 }
             }
-
         }
+
+        return super.visit(node)
+    }
+
+    override fun visit(node: SimpleName): Boolean {
+        // Add this. to field references
+        when (val binding = node.resolveBinding()) {
+            is IVariableBinding -> {
+                if (!node.isDeclaration && binding.isField && binding.declaringClass != null
+                    && when (val parent = node.parent) {
+                        null -> false
+                        is QualifiedName -> parent.qualifier.equals(node)
+                        is FieldAccess -> parent.expression.equals(node)
+                        else -> true
+                    }
+                ) {
+                    // このノードをFieldAccess(ThisExpression + SimpleName)に置換する
+                    val newNode = node.parent.ast.newFieldAccess()
+                    newNode.expression = newNode.ast.newThisExpression()
+                    newNode.name = astRewrite.createMoveTarget(node) as SimpleName
+
+                    astRewrite.replace(node, newNode, null)
+                }
+            }
+
+            is IMethodBinding -> {
+                val parent = node.parent
+                if (parent is MethodInvocation && parent.expression == null) {
+                    astRewrite.set(parent, MethodInvocation.EXPRESSION_PROPERTY, parent.ast.newThisExpression(), null)
+                }
+            }
+        }
+
         return super.visit(node)
     }
 }
