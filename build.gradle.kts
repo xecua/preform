@@ -25,6 +25,10 @@ dependencies {
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.29.0")
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r")
 
+    implementation("com.github.gumtreediff:core:3.0.0")
+    implementation("com.github.gumtreediff:client:3.0.0")
+    implementation("com.github.gumtreediff:gen.jdt:3.0.0")
+
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
 }

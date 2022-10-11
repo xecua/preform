@@ -16,6 +16,7 @@ import page.caffeine.preform.filter.normalizer.InlineLocalVariable
 import page.caffeine.preform.filter.normalizer.Linebreak
 import page.caffeine.preform.filter.normalizer.PassThrough
 import page.caffeine.preform.filter.normalizer.RemoveComment
+import page.caffeine.preform.filter.marker.NonEssentialDiffMarker
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.ITypeConverter
@@ -35,7 +36,8 @@ import java.util.function.BiConsumer
         QuickRemedyMarker::class,
         InlineLocalVariable::class,
         RemoveComment::class,
-        RevertCommitMarker::class
+        RevertCommitMarker::class,
+        NonEssentialDiffMarker::class,
     ]
 )
 class Preform : Callable<Int> {
