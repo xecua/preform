@@ -15,25 +15,27 @@ repositories {
     maven("https://jitpack.io")
 }
 
-val kotestVersion = "5.4.1"
+val kotestVersion = "5.5.0"
 
 dependencies {
-    implementation("io.github.microutils:kotlin-logging-jvm:2.1.23")
-    implementation("ch.qos.logback:logback-classic:1.2.11")
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.0")
+    implementation("ch.qos.logback:logback-classic:1.4.3")
 
     implementation("com.github.sh5i:git-stein:v0.5.0")
 
     implementation("info.picocli:picocli:4.6.3")
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.29.0")
-    implementation("org.eclipse.jgit:org.eclipse.jgit:6.2.0.202206071550-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r")
 
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
 }
 
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+kotlin {
+    // toolchain https://blog.jetbrains.com/kotlin/2021/11/gradle-jvm-toolchain-support-in-the-kotlin-plugin/
+    jvmToolchain {
+        (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(11))
+    }
 }
 
 tasks.withType<Test>().configureEach {
