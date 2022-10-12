@@ -1,4 +1,4 @@
-package page.caffeine.preform.utils
+package page.caffeine.preform.util
 
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.dom.AST

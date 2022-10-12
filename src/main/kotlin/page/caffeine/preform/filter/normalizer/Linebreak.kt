@@ -1,6 +1,6 @@
-package page.caffeine.preform.filters
+package page.caffeine.preform.filter.normalizer
 
-import page.caffeine.preform.utils.RepositoryRewriter
+import page.caffeine.preform.util.RepositoryRewriter
 import jp.ac.titech.c.se.stein.core.Context
 import mu.KotlinLogging
 import org.eclipse.jgit.lib.ObjectId

@@ -1,4 +1,4 @@
-package page.caffeine.preform.utils
+package page.caffeine.preform.util
 
 import jp.ac.titech.c.se.stein.core.Context
 import jp.ac.titech.c.se.stein.core.EntrySet

@@ -1,4 +1,4 @@
-package page.caffeine.preform.filters
+package page.caffeine.preform.filter.normalizer
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

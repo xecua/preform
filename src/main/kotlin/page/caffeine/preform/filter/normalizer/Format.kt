@@ -1,4 +1,4 @@
-package page.caffeine.preform.filters
+package page.caffeine.preform.filter.normalizer
 
 import jp.ac.titech.c.se.stein.core.Context
 import mu.KotlinLogging
@@ -6,7 +6,7 @@ import org.eclipse.jdt.core.ToolFactory
 import org.eclipse.jdt.core.formatter.CodeFormatter
 import org.eclipse.jface.text.Document
 import org.eclipse.jgit.lib.ObjectId
-import page.caffeine.preform.utils.RepositoryRewriter
+import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
 

@@ -1,4 +1,4 @@
-package page.caffeine.preform.filters
+package page.caffeine.preform.filter.normalizer
 
 import jp.ac.titech.c.se.stein.core.Context
 import jp.ac.titech.c.se.stein.core.EntrySet
@@ -22,8 +22,8 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite
 import org.eclipse.jface.text.Document
 import org.eclipse.jgit.lib.ObjectId
-import page.caffeine.preform.utils.RepositoryRewriter
-import page.caffeine.preform.utils.generateParser
+import page.caffeine.preform.util.RepositoryRewriter
+import page.caffeine.preform.util.generateParser
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
 

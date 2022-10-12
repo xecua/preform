@@ -1,11 +1,11 @@
-package page.caffeine.preform.filters
+package page.caffeine.preform.filter.normalizer
 
 import jp.ac.titech.c.se.stein.core.Context
 import jp.ac.titech.c.se.stein.core.EntrySet.Entry
 import org.eclipse.jdt.core.ToolFactory
 import org.eclipse.jdt.core.compiler.ITerminalSymbols
 import org.eclipse.jgit.lib.ObjectId
-import page.caffeine.preform.utils.RepositoryRewriter
+import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine
 import java.nio.charset.StandardCharsets
 
