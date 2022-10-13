@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets
 
 @CommandLine.Command(
     name = "RemoveComment",
-    description = ["Remove all comments from source code.", "depending on https://github.com/YoshikiHigo/CommentRemover"]
+    description = ["Remove all comments from source code.", "Inspired by https://github.com/YoshikiHigo/CommentRemover"]
 )
 class RemoveComment : RepositoryRewriter() {
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {

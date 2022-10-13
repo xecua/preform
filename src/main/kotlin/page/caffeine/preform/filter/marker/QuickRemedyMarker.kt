@@ -1,9 +1,9 @@
 package page.caffeine.preform.filter.marker
 
 import jp.ac.titech.c.se.stein.core.Context
-import page.caffeine.preform.util.RepositoryRewriter
 import mu.KotlinLogging
 import org.eclipse.jgit.revwalk.RevCommit
+import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 import java.time.Duration
 
@@ -18,15 +18,10 @@ class QuickRemedyMarker : RepositoryRewriter() {
         }
 
         // 1: done by same author as the parent commit
-        val commitAuthor = commit.authorIdent
-        if (commitAuthor == null) {
-            return super.rewriteCommitMessage(message, c)
-        }
+        val commitAuthor = commit.authorIdent ?: return super.rewriteCommitMessage(message, c)
 
         val parentAuthor = (target.parseAny(commit.getParent(0), c) as? RevCommit)?.authorIdent
-        if (parentAuthor == null) {
-            return super.rewriteCommitMessage(message, c)
-        }
+            ?: return super.rewriteCommitMessage(message, c)
 
         if (commitAuthor.name != parentAuthor.name) {
             return super.rewriteCommitMessage(message, c)
