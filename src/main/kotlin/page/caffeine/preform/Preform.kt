@@ -9,11 +9,12 @@ import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import page.caffeine.preform.filter.marker.QuickRemedyMarker
+import page.caffeine.preform.filter.marker.RevertCommitMarker
 import page.caffeine.preform.filter.normalizer.Format
 import page.caffeine.preform.filter.normalizer.InlineLocalVariable
 import page.caffeine.preform.filter.normalizer.Linebreak
 import page.caffeine.preform.filter.normalizer.PassThrough
-import page.caffeine.preform.filter.marker.QuickRemedyMarker
 import page.caffeine.preform.filter.normalizer.RemoveComment
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
@@ -32,8 +33,9 @@ import java.util.function.BiConsumer
         PassThrough::class,
         Linebreak::class,
         QuickRemedyMarker::class,
-        InlineLocalVariable ::class,
-        RemoveComment::class
+        InlineLocalVariable::class,
+        RemoveComment::class,
+        RevertCommitMarker::class
     ]
 )
 class Preform : Callable<Int> {
