@@ -24,6 +24,8 @@ dependencies {
     implementation("info.picocli:picocli:4.6.3")
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.29.0")
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r")
+    
+    implementation("com.github.tsantalis:refactoring-miner:2.3.2")
 
     implementation("com.github.gumtreediff:core:3.0.0")
     implementation("com.github.gumtreediff:client:3.0.0")

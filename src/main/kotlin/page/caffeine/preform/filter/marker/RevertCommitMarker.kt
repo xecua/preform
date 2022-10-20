@@ -64,9 +64,6 @@ class RevertCommitMarker : RepositoryRewriter() {
                 DiffEntry.ChangeType.MODIFY -> {
                     val fileName = it.newPath
 
-                    currentCommitChangeVector.modifiedFiles.add(fileName)
-
-
                     val edits = df.toFileHeader(it).toEditList()
                     edits.forEach { edit ->
                         when (edit.type!!) {
@@ -132,7 +129,6 @@ class RevertCommitMarker : RepositoryRewriter() {
 data class ChangeVector(
     val addedFiles: MutableSet<String> = mutableSetOf(),
     val deletedFiles: MutableSet<String> = mutableSetOf(),
-    val modifiedFiles: MutableSet<String> = mutableSetOf(),
     val addedCodes: MutableSet<String> = mutableSetOf(),
     val deletedCodes: MutableSet<String> = mutableSetOf()
 ) {
@@ -145,7 +141,6 @@ data class ChangeVector(
         }
         return this.addedFiles == other.addedFiles &&
             this.deletedFiles == other.deletedFiles &&
-            this.modifiedFiles == other.modifiedFiles &&
             this.addedCodes == other.addedCodes &&
             this.deletedCodes == other.deletedCodes
     }
@@ -154,13 +149,11 @@ data class ChangeVector(
     fun reverts(other: ChangeVector): Boolean =
         !(this.addedFiles.isEmpty() && other.addedFiles.isEmpty() &&
             this.deletedFiles.isEmpty() && other.deletedFiles.isEmpty() &&
-            this.modifiedFiles.isEmpty() && other.modifiedFiles.isEmpty() &&
             this.addedCodes.isEmpty() && other.addedCodes.isEmpty() &&
             this.deletedCodes.isEmpty() && other.deletedCodes.isEmpty()
             ) &&
             this.addedFiles == other.deletedFiles &&
             this.deletedFiles == other.addedFiles &&
-            this.modifiedFiles == other.modifiedFiles &&
             this.addedCodes == other.deletedCodes &&
             this.deletedCodes == other.addedCodes
 
@@ -168,7 +161,6 @@ data class ChangeVector(
     override fun hashCode(): Int {
         var result = addedFiles.hashCode()
         result = 31 * result + deletedFiles.hashCode()
-        result = 31 * result + modifiedFiles.hashCode()
         result = 31 * result + addedCodes.hashCode()
         result = 31 * result + deletedCodes.hashCode()
         return result
