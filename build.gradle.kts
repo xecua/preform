@@ -13,11 +13,11 @@ repositories {
     maven("https://jitpack.io")
 }
 
-val kotestVersion = "5.5.0"
+val kotestVersion = "5.5.1"
 
 dependencies {
-    implementation("io.github.microutils:kotlin-logging-jvm:3.0.0")
-    implementation("ch.qos.logback:logback-classic:1.4.3")
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.2")
+    implementation("ch.qos.logback:logback-classic:1.4.4")
 
     implementation("com.github.sh5i:git-stein:v0.5.0")
 
