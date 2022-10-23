@@ -23,6 +23,8 @@ import picocli.CommandLine.ITypeConverter
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.Callable
 import java.util.function.BiConsumer
 
@@ -122,7 +124,10 @@ class Preform : Callable<Int> {
                 it.initialize(source, target)
                 log.info { "Start rewriting by $it, ${source.directory} -> ${target.directory}" }
                 val c = Context.init()
+                val start = Instant.now()
                 it.rewrite(c)
+                val finish = Instant.now()
+                log.info { "Finished rewriting. Runtime: ${Duration.between(start, finish).toMillis()} ms" }
             }
         }
 
