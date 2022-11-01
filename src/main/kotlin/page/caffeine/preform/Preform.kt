@@ -9,6 +9,7 @@ import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import page.caffeine.preform.filter.marker.NonEssentialDiffMarker
 import page.caffeine.preform.filter.marker.QuickRemedyMarker
 import page.caffeine.preform.filter.marker.RevertCommitMarker
 import page.caffeine.preform.filter.normalizer.Format
@@ -16,17 +17,16 @@ import page.caffeine.preform.filter.normalizer.InlineLocalVariable
 import page.caffeine.preform.filter.normalizer.Linebreak
 import page.caffeine.preform.filter.normalizer.PassThrough
 import page.caffeine.preform.filter.normalizer.RemoveComment
-import page.caffeine.preform.filter.marker.NonEssentialDiffMarker
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.ITypeConverter
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
+import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Callable
-import java.util.function.BiConsumer
 
 @Command(
     name = "preform",
@@ -48,6 +48,7 @@ class Preform : Callable<Int> {
 
     // @Parameters(index = "1", paramLabel = "<filter>", description = ["Using filter"], arity="1..*")
     var filters: MutableList<RepositoryRewriter> = mutableListOf()
+    var directories: MutableList<File> = mutableListOf()
 
     @ArgGroup(exclusive = false, multiplicity = "0..1")
     var output: OutputOptions? = null
@@ -117,48 +118,68 @@ class Preform : Callable<Int> {
             setLoggerLevel("org.eclipse.jgit", Level.INFO)
         }
 
-        openRepositories { source, target ->
-            // とりあえず順番に?
-            // TODO: 最後以外は一時ディレクトリに退避する
-            filters.forEach {
-                it.initialize(source, target)
-                log.info { "Start rewriting by $it, ${source.directory} -> ${target.directory}" }
-                val c = Context.init()
-                val start = Instant.now()
-                it.rewrite(c)
-                val finish = Instant.now()
-                log.info { "Finished rewriting. Runtime: ${Duration.between(start, finish).toMillis()} ms" }
-            }
+        openRepositories(filters.size) { source, target, i ->
+            val filter = filters[i]
+
+            filter.initialize(source, target)
+            log.info { "Start rewriting by $filter, ${source.directory} -> ${target.directory}" }
+            val c = Context.init()
+            val start = Instant.now()
+            filter.rewrite(c)
+            val finish = Instant.now()
+            log.info { "Finished rewriting. Runtime: ${Duration.between(start, finish).toMillis()} ms" }
         }
 
         return 0
     }
 
-    private fun openRepositories(action: BiConsumer<Repository, Repository>) {
+    private fun openRepositories(times: Int, action: (Repository, Repository, Int) -> Unit) {
+        if (times <= 0) {
+            return
+        }
+
         if (output == null) {
             createRepository(source, false).use { repo ->
-                action.accept(repo, repo)
+                for (i in 0 until times) {
+                    action(repo, repo, i)
+                }
             }
             return
         }
 
-        if (output?.isCleaning == true && output?.target?.exists() == true) {
-            log.info { "Cleaning destination repository ${output?.target}" }
-            output?.target?.deleteRecursively()
-        }
-
-        if (output?.isDuplicating == true) {
-            log.info { "Duplicating source repository $source to ${output?.target}" }
-            source.copyRecursively(output?.target!!, overwrite = true)
-            createRepository(output?.target!!, false).use { repo ->
-                action.accept(repo, repo)
+        for (i in 0 until times) {
+            val src = if (i == 0) {
+                source
+            } else {
+                directories[i - 1]
             }
-            return
-        }
 
-        createRepository(source, false).use { source ->
-            createRepository(output?.target!!, true).use { target ->
-                action.accept(source, target)
+            val dst = if (i == times - 1) {
+                if (output?.isCleaning == true && output?.target?.exists() == true) {
+                    log.info { "Cleaning destination repository ${output?.target}" }
+                    output?.target?.deleteRecursively()
+                }
+                output?.target!!
+            } else {
+                val dir = Files.createTempDirectory(i.toString()).toFile()
+                dir.deleteRecursively() // 名前だけ確保して削除
+                directories.add(dir)
+                dir
+            }
+
+            if (output?.isDuplicating == true) {
+                log.info { "Duplicating source repository $src to $dst" }
+                src.copyTo(dst, true)
+                createRepository(output?.target!!, false).use { repo ->
+                    action(repo, repo, i)
+                }
+            } else {
+                createRepository(src, false).use { source ->
+                    createRepository(dst, true).use { target ->
+                        action(source, target, i)
+                    }
+                }
+
             }
         }
 
