@@ -17,6 +17,7 @@ import page.caffeine.preform.filter.normalizer.InlineLocalVariable
 import page.caffeine.preform.filter.normalizer.Linebreak
 import page.caffeine.preform.filter.normalizer.PassThrough
 import page.caffeine.preform.filter.normalizer.RemoveComment
+import page.caffeine.preform.filter.normalizer.TrivialKeyword
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.ITypeConverter
@@ -40,6 +41,7 @@ import java.util.concurrent.Callable
         RemoveComment::class,
         RevertCommitMarker::class,
         NonEssentialDiffMarker::class,
+        TrivialKeyword::class,
     ]
 )
 class Preform : Callable<Int> {
