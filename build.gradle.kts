@@ -13,16 +13,16 @@ repositories {
     maven("https://jitpack.io")
 }
 
-val kotestVersion = "5.5.1"
+val kotestVersion = "5.5.3"
 
 dependencies {
-    implementation("io.github.microutils:kotlin-logging-jvm:3.0.2")
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.3")
     implementation("ch.qos.logback:logback-classic:1.4.4")
 
     implementation("com.github.sh5i:git-stein:v0.5.0")
 
-    implementation("info.picocli:picocli:4.6.3")
-    implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.29.0")
+    implementation("info.picocli:picocli:4.7.0")
+    implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.31.0")
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r")
     
     implementation("com.github.tsantalis:refactoring-miner:2.3.2")
