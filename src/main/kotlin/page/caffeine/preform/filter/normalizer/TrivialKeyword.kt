@@ -15,6 +15,7 @@ import org.eclipse.jdt.core.dom.PrimitiveType
 import org.eclipse.jdt.core.dom.QualifiedName
 import org.eclipse.jdt.core.dom.SimpleName
 import org.eclipse.jdt.core.dom.Statement
+import org.eclipse.jdt.core.dom.SuperConstructorInvocation
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite
 import org.eclipse.jface.text.Document
 import org.eclipse.jgit.lib.ObjectId
@@ -23,10 +24,7 @@ import page.caffeine.preform.util.generateParser
 import picocli.CommandLine
 import java.nio.charset.StandardCharsets
 
-@CommandLine.Command(
-    name = "FullQualifier",
-    description = ["Fully-Qualify class names, keywords, etc."]
-)
+@CommandLine.Command(name = "TrivialKeyword", description = ["Normalize trivial keyword"])
 class TrivialKeyword : RepositoryRewriter() {
     // @Option(
     //     names = ["--keyword"],
@@ -89,12 +87,8 @@ class TrivialKeywordVisitor(private val content: String, rootNode: CompilationUn
             }
         } else {
             // return type become null when this is constructor
-
             // Redundant return statement in void methods
-            if (node.returnType2.isPrimitiveType &&
-                (node.returnType2 as PrimitiveType).primitiveTypeCode ==
-                PrimitiveType.VOID
-            ) {
+            if (node.returnType2 != null && node.returnType2.isPrimitiveType && (node.returnType2 as PrimitiveType).primitiveTypeCode == PrimitiveType.VOID) {
                 if (statements.isNotEmpty()) {
                     val last = statements.last()
                     if (last.nodeType == ASTNode.RETURN_STATEMENT) {
