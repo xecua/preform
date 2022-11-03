@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.dom.*
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite
 import org.eclipse.jface.text.Document
 import org.eclipse.jgit.lib.ObjectId
+import org.eclipse.jgit.revwalk.RevCommit
 import page.caffeine.preform.util.RepositoryRewriter
 import page.caffeine.preform.util.generateParser
 import picocli.CommandLine.Command
@@ -14,6 +15,36 @@ import java.nio.charset.StandardCharsets
 
 @Command(name = "LocalVariableInliner", description = ["Revert Local variable extraction by inlining it"])
 class LocalVariableInliner : RepositoryRewriter() {
+    private var numOfInstances = 0
+    private var numOfFilesWithInstance = 0
+    private var numOfFilesWithInstanceInCommit = 0
+    private var numOfCommitsWithInstance = 0
+
+    override fun cleanUp(c: Context?) {
+        println(
+            """
+                #Instance: $numOfInstances
+                #File containing at least one instance: $numOfFilesWithInstance
+                #Commit containing at least one instance: $numOfCommitsWithInstance
+            """.trimIndent()
+        )
+
+        super.cleanUp(c)
+    }
+
+    override fun rewriteCommit(commit: RevCommit?, c: Context?): ObjectId {
+        numOfFilesWithInstanceInCommit = 0
+
+        val ret = super.rewriteCommit(commit, c)
+        
+        numOfFilesWithInstance += numOfFilesWithInstanceInCommit
+        if (numOfFilesWithInstanceInCommit > 0) {
+            numOfCommitsWithInstance++
+        }
+        
+        return ret
+    }
+    
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {
         val fileName =
             (c?.get(Context.Key.entry) as? EntrySet.Entry)?.name?.lowercase() ?: return super.rewriteBlob(blobId, c)
@@ -37,6 +68,12 @@ class LocalVariableInliner : RepositoryRewriter() {
         }
         val visitor = LocalVariableVisitor(content, tree)
         tree.accept(visitor)
+        
+        numOfInstances += visitor.numOfInstances
+        if (visitor.numOfInstances > 0) {
+            numOfFilesWithInstanceInCommit++
+        }
+        
         return visitor.getRewrittenContent()
     }
 
@@ -47,8 +84,7 @@ class LocalVariableInliner : RepositoryRewriter() {
 }
 
 class LocalVariableVisitor(
-    private val content: String,
-    rootNode: CompilationUnit
+    private val content: String, rootNode: CompilationUnit
 ) : ASTVisitor() {
     private var isInsideMethod = false
     private val variableDefUse = mutableMapOf<String, DefUse>()
@@ -63,6 +99,9 @@ class LocalVariableVisitor(
     private var canReplace = false
 
     private var astRewrite: ASTRewrite = ASTRewrite.create(rootNode.ast)
+    
+    var numOfInstances = 0
+        private set
 
     fun getRewrittenContent(): String {
         val doc = Document(content)
@@ -82,13 +121,14 @@ class LocalVariableVisitor(
         variableDefUse.forEach { (_, usage) ->
             if (usage.appearanceCount == 1) {
                 // 直後の文で一回だけ使われた
-                @Suppress("UNCHECKED_CAST")
-                val replacingExpr = (usage.def.fragments() as List<VariableDeclarationFragment>).last()
+                @Suppress("UNCHECKED_CAST") val replacingExpr =
+                    (usage.def.fragments() as List<VariableDeclarationFragment>).last()
                 if (usage.def.fragments().size == 1) {
                     astRewrite.remove(usage.def, null)
                 }
                 val replacing = astRewrite.createCopyTarget(replacingExpr.initializer)
                 astRewrite.replace(usage.rightAfterUse, replacing, null)
+                numOfInstances++
             }
         }
 
@@ -96,8 +136,7 @@ class LocalVariableVisitor(
     }
 
     override fun visit(node: VariableDeclarationStatement): Boolean {
-        @Suppress("UNCHECKED_CAST")
-        val expr = (node.fragments() as List<VariableDeclarationFragment>).last()
+        @Suppress("UNCHECKED_CAST") val expr = (node.fragments() as List<VariableDeclarationFragment>).last()
 
         // 初期化してないと意味ない
         if (expr.initializer != null) {
@@ -250,7 +289,5 @@ class LocalVariableVisitor(
 }
 
 data class DefUse(
-    val def: VariableDeclarationStatement,
-    var rightAfterUse: SimpleName,
-    var appearanceCount: Int
+    val def: VariableDeclarationStatement, var rightAfterUse: SimpleName, var appearanceCount: Int
 )

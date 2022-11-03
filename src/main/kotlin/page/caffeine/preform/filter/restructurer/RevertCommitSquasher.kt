@@ -21,6 +21,14 @@ class RevertCommitSquasher : RepositoryRewriter() {
     private var previousCommitChangeVector = ChangeVector()
     private var parentCommitIdIfItRevertsParent: RevCommit? = null
 
+    private var numOfPairs = 0
+
+    override fun cleanUp(c: Context?) {
+        println("#Revert pairs: $numOfPairs")
+
+        super.cleanUp(c)
+    }
+
     override fun rewriteParents(parents: Array<out ObjectId>?, c: Context?): Array<ObjectId> {
         val commit = c?.commit
         if (commit == null) {
@@ -39,6 +47,7 @@ class RevertCommitSquasher : RepositoryRewriter() {
                 }
             }
 
+            numOfPairs++
             parentCommitIdIfItRevertsParent = null
             previousCommitChangeVector = ChangeVector()
             return newParents.map { commitMapping[it] ?: it }.toTypedArray()

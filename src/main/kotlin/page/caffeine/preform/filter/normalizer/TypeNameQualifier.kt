@@ -8,12 +8,41 @@ import org.eclipse.jdt.core.dom.*
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite
 import org.eclipse.jface.text.Document
 import org.eclipse.jgit.lib.ObjectId
+import org.eclipse.jgit.revwalk.RevCommit
 import page.caffeine.preform.util.generateParser
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
 
 @Command(name = "TypeNameQualifier", description = ["Try to fully-qualify all class names."])
 class TypeNameQualifier : RepositoryRewriter() {
+    private var numOfInstances = 0
+    private var numOfFilesWithInstance = 0
+    private var numOfFilesWithInstanceInCommit = 0
+    private var numOfCommitsWithInstance = 0
+
+    override fun cleanUp(c: Context?) {
+        println(
+            """
+                #Instance: $numOfInstances
+                #File containing at least one instance: $numOfFilesWithInstance
+                #Commit containing at least one instance: $numOfCommitsWithInstance
+            """.trimIndent()
+        )
+        super.cleanUp(c)
+    }
+
+    override fun rewriteCommit(commit: RevCommit?, c: Context?): ObjectId {
+        numOfFilesWithInstanceInCommit = 0
+        val ret = super.rewriteCommit(commit, c)
+
+        numOfFilesWithInstance += numOfFilesWithInstanceInCommit
+        if (numOfFilesWithInstanceInCommit > 0) {
+            numOfCommitsWithInstance++
+        }
+
+        return ret
+    }
+    
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {
         val fileName =
             (c?.get(Context.Key.entry) as? EntrySet.Entry)?.name?.lowercase() ?: return super.rewriteBlob(blobId, c)
@@ -41,6 +70,12 @@ class TypeNameQualifier : RepositoryRewriter() {
 
         val visitor = TrivialTypeVisitor(content, tree)
         tree.accept(visitor)
+
+        numOfInstances += visitor.numOfInstances
+        if (visitor.numOfInstances > 0) {
+            numOfFilesWithInstanceInCommit++
+        }
+        
         return visitor.getRewrittenContent()
     }
 
@@ -54,6 +89,9 @@ class TrivialTypeVisitor(private val content: String, rootNode: CompilationUnit)
     private var astRewrite = ASTRewrite.create(rootNode.ast)
     private var packageName: String? = null
     private val importedTypes: MutableMap<String, Name> = mutableMapOf()
+    
+    var numOfInstances = 0
+        private set
 
     fun getRewrittenContent(): String {
         val doc = Document(content)
@@ -83,6 +121,7 @@ class TrivialTypeVisitor(private val content: String, rootNode: CompilationUnit)
             val qualifiedName = astRewrite.createCopyTarget(importedTypes[name]) as Name
             val newNode = node.parent.ast.newSimpleType(qualifiedName)
             astRewrite.replace(node, newNode, null)
+            numOfInstances++
         }
 
         return super.visit(node)

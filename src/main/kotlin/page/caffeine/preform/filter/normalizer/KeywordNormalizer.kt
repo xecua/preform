@@ -2,11 +2,11 @@ package page.caffeine.preform.filter.normalizer
 
 import jp.ac.titech.c.se.stein.core.Context
 import jp.ac.titech.c.se.stein.core.EntrySet
-import mu.KotlinLogging
 import org.eclipse.jdt.core.dom.*
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite
 import org.eclipse.jface.text.Document
 import org.eclipse.jgit.lib.ObjectId
+import org.eclipse.jgit.revwalk.RevCommit
 import page.caffeine.preform.util.RepositoryRewriter
 import page.caffeine.preform.util.generateParser
 import picocli.CommandLine
@@ -28,6 +28,64 @@ class KeywordNormalizer : RepositoryRewriter() {
 
     // @Option(names= [ "--idents"], description = ["Make identifiers fully-qualified"])
     // private var applyToIdents: Boolean = true
+
+    private var numOfReturnStmtInVoidMethod = 0
+    private var numOfFilesWithReturnStmtInVoidMethod = 0
+    private var numOfFilesWithReturnStmtInVoidMethodInCommit = 0
+    private var numOfCommitsWithReturnStmtInVoidMethod = 0
+    private var numOfSuperInDefaultConstructor = 0
+    private var numOfFilesWithSuperInDefaultConstructor = 0
+    private var numOfFilesWithSuperInDefaultConstructorInCommit = 0
+    private var numOfCommitsWithSuperInConstructor = 0
+    private var numOfMissingThisReceiver = 0
+    private var numOfFilesWithMissingThisReceiver = 0
+    private var numOfFilesWithMissingThisReceiverInCommit = 0
+    private var numOfCommitsWithMissingThisReceiver = 0
+
+    override fun cleanUp(c: Context?) {
+        println(
+            """
+            #Instance:
+                `return` in void method: $numOfReturnStmtInVoidMethod
+                `super()` in default constructor: $numOfSuperInDefaultConstructor
+                expressions with missing `this` receiver: $numOfMissingThisReceiver
+            #File containing at least one instance:
+                `return` in void method: $numOfFilesWithReturnStmtInVoidMethod
+                `super()` in default constructor: $numOfFilesWithSuperInDefaultConstructor
+                expressions with missing `this` receiver: $numOfFilesWithMissingThisReceiver
+            #Commit containing at least one instance:
+                `return` in void method: $numOfCommitsWithReturnStmtInVoidMethod
+                `super()` in default constructor: $numOfCommitsWithSuperInConstructor
+                expressions with missing `this` receiver: $numOfCommitsWithMissingThisReceiver
+        """.trimIndent()
+        )
+
+        super.cleanUp(c)
+    }
+
+    override fun rewriteCommit(commit: RevCommit?, c: Context?): ObjectId {
+        // commit level aggregation
+        numOfFilesWithMissingThisReceiverInCommit = 0
+        numOfFilesWithSuperInDefaultConstructorInCommit = 0
+        numOfFilesWithReturnStmtInVoidMethodInCommit = 0
+
+        val ret = super.rewriteCommit(commit, c)
+
+        numOfFilesWithSuperInDefaultConstructor += numOfFilesWithSuperInDefaultConstructorInCommit
+        if (numOfFilesWithSuperInDefaultConstructorInCommit > 0) {
+            numOfCommitsWithSuperInConstructor++
+        }
+        numOfFilesWithReturnStmtInVoidMethod += numOfFilesWithReturnStmtInVoidMethodInCommit
+        if (numOfFilesWithReturnStmtInVoidMethodInCommit > 0) {
+            numOfCommitsWithReturnStmtInVoidMethod++
+        }
+        numOfFilesWithMissingThisReceiver += numOfFilesWithMissingThisReceiverInCommit
+        if (numOfFilesWithMissingThisReceiverInCommit > 0) {
+            numOfCommitsWithMissingThisReceiver++
+        }
+
+        return ret
+    }
 
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {
         val fileName =
@@ -55,16 +113,35 @@ class KeywordNormalizer : RepositoryRewriter() {
 
         val visitor = KeywordVisitor(content, tree)
         tree.accept(visitor)
-        return visitor.getRewrittenContent()
-    }
 
-    companion object {
-        private val logger = KotlinLogging.logger {}
+        // file level aggregation
+        numOfSuperInDefaultConstructor += visitor.numOfSuperInConstructor
+        if (visitor.numOfSuperInConstructor > 0) {
+            numOfFilesWithSuperInDefaultConstructorInCommit++
+        }
+        numOfReturnStmtInVoidMethod += visitor.numOfReturnStmtInVoidMethod
+        if (visitor.numOfReturnStmtInVoidMethod > 0) {
+            numOfFilesWithReturnStmtInVoidMethodInCommit++
+        }
+        numOfMissingThisReceiver += visitor.numOfMissingThisReceiver
+        if (visitor.numOfMissingThisReceiver > 0) {
+            numOfFilesWithMissingThisReceiverInCommit++
+        }
+
+
+        return visitor.getRewrittenContent()
     }
 }
 
 class KeywordVisitor(private val content: String, rootNode: CompilationUnit) : ASTVisitor() {
     private var astRewrite = ASTRewrite.create(rootNode.ast)
+
+    var numOfReturnStmtInVoidMethod = 0
+        private set
+    var numOfSuperInConstructor = 0
+        private set
+    var numOfMissingThisReceiver = 0
+        private set
 
     fun getRewrittenContent(): String {
         val doc = Document(content)
@@ -84,10 +161,12 @@ class KeywordVisitor(private val content: String, rootNode: CompilationUnit) : A
                 if (first.nodeType == ASTNode.SUPER_CONSTRUCTOR_INVOCATION && (first as SuperConstructorInvocation).arguments().size == 0) {
                     val bodyRewrite = astRewrite.getListRewrite(body, Block.STATEMENTS_PROPERTY)
                     bodyRewrite.remove(first, null)
+                    numOfSuperInConstructor++
                 }
             }
         } else {
             // return type become null when this is constructor
+
             // Redundant return statement in void methods
             if (node.returnType2?.isPrimitiveType == true && (node.returnType2 as PrimitiveType).primitiveTypeCode == PrimitiveType.VOID) {
                 if (statements.isNotEmpty()) {
@@ -95,6 +174,7 @@ class KeywordVisitor(private val content: String, rootNode: CompilationUnit) : A
                     if (last.nodeType == ASTNode.RETURN_STATEMENT) {
                         val bodyRewrite = astRewrite.getListRewrite(body, Block.STATEMENTS_PROPERTY)
                         bodyRewrite.remove(last, null)
+                        numOfReturnStmtInVoidMethod++
                     }
                 }
             }
@@ -107,8 +187,8 @@ class KeywordVisitor(private val content: String, rootNode: CompilationUnit) : A
         // Add this. to field references
         when (val binding = node.resolveBinding()) {
             is IVariableBinding -> {
-                if (!node.isDeclaration && binding.isField && binding.declaringClass != null
-                    && when (val parent = node.parent) {
+                if (!node.isDeclaration && binding.isField && binding.declaringClass != null && when (val parent =
+                        node.parent) {
                         null -> false
                         is QualifiedName -> parent.qualifier.equals(node)
                         is FieldAccess -> parent.expression.equals(node)
@@ -121,6 +201,7 @@ class KeywordVisitor(private val content: String, rootNode: CompilationUnit) : A
                     newNode.name = astRewrite.createMoveTarget(node) as SimpleName
 
                     astRewrite.replace(node, newNode, null)
+                    numOfMissingThisReceiver++
                 }
             }
 
@@ -128,6 +209,7 @@ class KeywordVisitor(private val content: String, rootNode: CompilationUnit) : A
                 val parent = node.parent
                 if (parent is MethodInvocation && parent.expression == null) {
                     astRewrite.set(parent, MethodInvocation.EXPRESSION_PROPERTY, parent.ast.newThisExpression(), null)
+                    numOfMissingThisReceiver++
                 }
             }
         }
