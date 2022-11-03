@@ -78,11 +78,11 @@ class TrivialKeywordVisitor(private val content: String, rootNode: CompilationUn
         val body = node.body
         @Suppress("UNCHECKED_CAST") val statements = body.statements() as List<Statement>
 
-        // Redundant default super constructor invocation
-        if (node.isConstructor) {
+        // Redundant default super constructor invocation in default constructor
+        if (node.isConstructor && node.parameters().size == 0) {
             if (statements.isNotEmpty()) {
                 val first = statements.first()
-                if (first.nodeType == ASTNode.SUPER_CONSTRUCTOR_INVOCATION) {
+                if (first.nodeType == ASTNode.SUPER_CONSTRUCTOR_INVOCATION && (first as SuperConstructorInvocation).arguments().size == 0) {
                     val bodyRewrite = astRewrite.getListRewrite(body, Block.STATEMENTS_PROPERTY)
                     bodyRewrite.remove(first, null)
                 }
