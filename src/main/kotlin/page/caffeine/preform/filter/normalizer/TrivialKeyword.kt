@@ -2,6 +2,7 @@ package page.caffeine.preform.filter.normalizer
 
 import jp.ac.titech.c.se.stein.core.Context
 import jp.ac.titech.c.se.stein.core.EntrySet
+import mu.KotlinLogging
 import org.eclipse.jdt.core.dom.ASTNode
 import org.eclipse.jdt.core.dom.ASTVisitor
 import org.eclipse.jdt.core.dom.Block
@@ -37,8 +38,7 @@ class TrivialKeyword : RepositoryRewriter() {
 
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {
         val fileName =
-            (c?.get(Context.Key.entry) as? EntrySet.Entry)?.name?.lowercase()
-                ?: return super.rewriteBlob(blobId, c)
+            (c?.get(Context.Key.entry) as? EntrySet.Entry)?.name?.lowercase() ?: return super.rewriteBlob(blobId, c)
         if (!fileName.endsWith(".java")) {
             return super.rewriteBlob(blobId, c)
         }
@@ -55,10 +55,19 @@ class TrivialKeyword : RepositoryRewriter() {
         parser.setBindingsRecovery(true)
         parser.setStatementsRecovery(true)
         parser.setUnitName("") // setting non-null make resolution work within file
-        val tree = parser.createAST(null) as CompilationUnit
+        val tree = try {
+            parser.createAST(null) as CompilationUnit
+        } catch (e: Exception) {
+            logger.warn(e) { "Ignoring." }
+            return content
+        }
         val visitor = TrivialKeywordVisitor(content, tree)
         tree.accept(visitor)
         return visitor.getRewrittenContent()
+    }
+
+    companion object {
+        private val logger = KotlinLogging.logger {}
     }
 }
 
@@ -73,7 +82,8 @@ class TrivialKeywordVisitor(private val content: String, rootNode: CompilationUn
     }
 
     override fun visit(node: MethodDeclaration): Boolean {
-        val body = node.body
+        val body = node.body ?: return super.visit(node)
+
         @Suppress("UNCHECKED_CAST") val statements = body.statements() as List<Statement>
 
         // Redundant default super constructor invocation in default constructor
