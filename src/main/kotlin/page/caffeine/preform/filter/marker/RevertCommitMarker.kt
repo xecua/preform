@@ -6,30 +6,44 @@ import org.eclipse.jgit.diff.DiffEntry
 import org.eclipse.jgit.diff.DiffFormatter
 import org.eclipse.jgit.diff.Edit
 import org.eclipse.jgit.diff.RawText
+import org.eclipse.jgit.lib.ObjectId
 import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 
-@Command(name = "RevertCommitMarker", description = ["Mark reverting commits."])
+@Command(name = "RevertCommitMarker", description = ["Mark revert commits.", "Currently supporting consecutive pair."])
 class RevertCommitMarker : RepositoryRewriter() {
     // commit vector
     // 並列処理を前提としないのならこいつは直接の親になるはず(逆に言うと並列だと一致しない可能性がある)
     // 富豪プログラミングするなら別にそれでもいい
     private var previousCommitChangeVector = ChangeVector()
 
+    private val revertedCommits = mutableSetOf<ObjectId>()
+
+    override fun rewriteCommits(c: Context?) {
+        super.rewriteCommits(c)
+        super.rewriteCommits(c) // traverse twice to mark reverted commits
+    }
 
     override fun rewriteCommitMessage(message: String?, c: Context?): String {
         val commit = c?.commit ?: return super.rewriteCommitMessage(message, c)
+
+        if (revertedCommits.contains(commit)) {
+            return annotateComment(message ?: "", false)
+        }
+
         if (commit.parentCount != 1) {
             return super.rewriteCommitMessage(message, c)
         }
 
         val parentCommit = commit.getParent(0)
 
-        // 親コミットに注釈をつける方はとりあえず考えないことにする
-
         // as same condition as Wen et al. (2022).
-        if (message != null && REVERTING_COMMIT_MESSAGE_PATTERN.matches(message)) {
-            return annotateComment(message)
+        if (message != null) {
+            val match = REVERTING_COMMIT_MESSAGE_PATTERN.matchEntire(message)
+            if (match != null && match.groupValues[1] == parentCommit.name) {
+                revertedCommits.add(parentCommit)
+                return annotateComment(message, true)
+            }
         }
 
         // val df = DiffFormatter(DisabledOutputStream.INSTANCE)
@@ -106,23 +120,24 @@ class RevertCommitMarker : RepositoryRewriter() {
         // check if this commit reverts previous commit
         if (currentCommitChangeVector.reverts(previousCommitChangeVector)) {
             previousCommitChangeVector = currentCommitChangeVector
-            return annotateComment(message ?: "")
+            revertedCommits.add(parentCommit)
+            return annotateComment(message ?: "", true)
         }
 
         previousCommitChangeVector = currentCommitChangeVector
         return super.rewriteCommitMessage(message, c)
     }
 
-    private fun annotateComment(message: String): String = """
+    private fun annotateComment(message: String, reverting: Boolean): String = """
             |$message
             |
-            |[Preform] Reverting Commit
+            |[Preform] ${if (reverting) "Reverting" else "Reverted"} Commit
             |""".trimMargin()
 
     companion object {
         private val logger = KotlinLogging.logger {}
 
-        val REVERTING_COMMIT_MESSAGE_PATTERN = Regex("""^Revert ".*This reverts commit [0-9a-f]{40}.*""")
+        val REVERTING_COMMIT_MESSAGE_PATTERN = Regex("""^Revert ".*This reverts commit ([0-9a-f]{40}).*""")
     }
 }
 
