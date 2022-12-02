@@ -18,6 +18,7 @@ import page.caffeine.preform.filter.normalizer.Linebreak
 import page.caffeine.preform.filter.normalizer.PassThrough
 import page.caffeine.preform.filter.normalizer.RemoveComment
 import page.caffeine.preform.filter.normalizer.TrivialKeyword
+import page.caffeine.preform.filter.restructurer.RevertCommitSquasher
 import picocli.CommandLine.Command
 import picocli.CommandLine.ITypeConverter
 import picocli.CommandLine.Option
@@ -39,6 +40,7 @@ import java.util.concurrent.Callable
         QuickRemedyMarker::class,
         InlineLocalVariable::class,
         RemoveComment::class,
+        RevertCommitSquasher::class,
         RevertCommitMarker::class,
         NonEssentialDiffMarker::class,
         TrivialKeyword::class,

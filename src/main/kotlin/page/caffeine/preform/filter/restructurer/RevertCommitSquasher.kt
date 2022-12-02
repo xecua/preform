@@ -1,4 +1,4 @@
-package page.caffeine.preform.filter.marker
+package page.caffeine.preform.filter.restructurer
 
 import jp.ac.titech.c.se.stein.core.Context
 import mu.KotlinLogging
@@ -7,43 +7,49 @@ import org.eclipse.jgit.diff.DiffFormatter
 import org.eclipse.jgit.diff.Edit
 import org.eclipse.jgit.diff.RawText
 import org.eclipse.jgit.lib.ObjectId
+import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.util.io.DisabledOutputStream
+import page.caffeine.preform.filter.marker.ChangeVector
 import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 
-@Command(name = "RevertCommitMarker", description = ["Mark revert commits.", "Currently supporting consecutive pair."])
-class RevertCommitMarker : RepositoryRewriter() {
-    // commit vector
-    // 並列処理を前提としないのならこいつは直接の親になるはず(逆に言うと並列だと一致しない可能性がある)
-    // 富豪プログラミングするなら別にそれでもいい
+@Command(
+    name = "RevertCommit",
+    description = ["Squash reverting and reverted commits", "Currently supporting consecutive pair."]
+)
+class RevertCommitSquasher : RepositoryRewriter() {
     private var previousCommitChangeVector = ChangeVector()
+    private var parentCommitIdIfItRevertsParent: RevCommit? = null
 
-    private val revertedCommits = mutableSetOf<ObjectId>()
+    override fun rewriteParents(parents: Array<out ObjectId>?, c: Context?): Array<ObjectId> {
+        val commit = c?.commit ?: return super.rewriteParents(parents, c)
 
-    override fun rewriteCommits(c: Context?) {
-        super.rewriteCommits(c)
-        super.rewriteCommits(c) // traverse twice to mark reverted commits
-    }
+        if (parentCommitIdIfItRevertsParent != null) {
+            val newParents = commit.parents.flatMap {
+                if (it == parentCommitIdIfItRevertsParent) {
+                    // it is guaranteed that it has only one parent
+                    it.getParent(0).parents.toList()
+                } else {
+                    listOf(it as ObjectId)
+                }
+            }.toTypedArray()
 
-    override fun rewriteCommitMessage(message: String?, c: Context?): String {
-        val commit = c?.commit ?: return super.rewriteCommitMessage(message, c)
-
-        if (revertedCommits.contains(commit)) {
-            return annotateComment(message ?: "", false)
+            parentCommitIdIfItRevertsParent = null
+            return newParents
         }
 
         if (commit.parentCount != 1) {
-            return super.rewriteCommitMessage(message, c)
+            return super.rewriteParents(parents, c)
         }
 
         val parentCommit = commit.getParent(0)
 
         // as same condition as Wen et al. (2022).
-        if (message != null) {
-            val match = REVERTING_COMMIT_MESSAGE_PATTERN.matchEntire(message)
+        if (commit.fullMessage != null) {
+            val match = REVERTING_COMMIT_MESSAGE_PATTERN.matchEntire(commit.fullMessage)
             if (match != null && match.groupValues[1] == parentCommit.name) {
-                revertedCommits.add(parentCommit)
-                return annotateComment(message, true)
+                parentCommitIdIfItRevertsParent = commit
+                return super.rewriteParents(parents, c)
             }
         }
 
@@ -119,66 +125,15 @@ class RevertCommitMarker : RepositoryRewriter() {
 
         // check if this commit reverts previous commit
         if (currentCommitChangeVector.reverts(previousCommitChangeVector)) {
-            previousCommitChangeVector = currentCommitChangeVector
-            revertedCommits.add(parentCommit)
-            return annotateComment(message ?: "", true)
+            parentCommitIdIfItRevertsParent = commit
         }
 
-        previousCommitChangeVector = currentCommitChangeVector
-        return super.rewriteCommitMessage(message, c)
+        return super.rewriteParents(parents, c)
     }
-
-    private fun annotateComment(message: String, reverting: Boolean): String = """
-            |$message
-            |
-            |[Preform] ${if (reverting) "Reverting" else "Reverted"} Commit
-            |""".trimMargin()
 
     companion object {
         private val logger = KotlinLogging.logger {}
 
         val REVERTING_COMMIT_MESSAGE_PATTERN = Regex("""^Revert ".*This reverts commit ([0-9a-f]{40}).*""")
     }
-}
-
-data class ChangeVector(
-    val addedFiles: MutableSet<String> = mutableSetOf(),
-    val deletedFiles: MutableSet<String> = mutableSetOf(),
-    val addedCodes: MutableSet<String> = mutableSetOf(),
-    val deletedCodes: MutableSet<String> = mutableSetOf()
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        }
-        if (other !is ChangeVector) {
-            return false
-        }
-        return this.addedFiles == other.addedFiles &&
-            this.deletedFiles == other.deletedFiles &&
-            this.addedCodes == other.addedCodes &&
-            this.deletedCodes == other.deletedCodes
-    }
-
-    // 全部空だと真になっちゃうのだけ回避
-    fun reverts(other: ChangeVector): Boolean =
-        !(this.addedFiles.isEmpty() && other.addedFiles.isEmpty() &&
-            this.deletedFiles.isEmpty() && other.deletedFiles.isEmpty() &&
-            this.addedCodes.isEmpty() && other.addedCodes.isEmpty() &&
-            this.deletedCodes.isEmpty() && other.deletedCodes.isEmpty()
-            ) &&
-            this.addedFiles == other.deletedFiles &&
-            this.deletedFiles == other.addedFiles &&
-            this.addedCodes == other.deletedCodes &&
-            this.deletedCodes == other.addedCodes
-
-    // auto-generated
-    override fun hashCode(): Int {
-        var result = addedFiles.hashCode()
-        result = 31 * result + deletedFiles.hashCode()
-        result = 31 * result + addedCodes.hashCode()
-        result = 31 * result + deletedCodes.hashCode()
-        return result
-    }
-
 }
