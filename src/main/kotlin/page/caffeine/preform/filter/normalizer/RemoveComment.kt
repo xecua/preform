@@ -52,8 +52,8 @@ class JavaCommentRemover {
                     dest.setLength(dest.length - currentLineContent.length)
                 } else {
                     // コメントまでになんかあったら改行入れる(行コメントは改行文字も含むので)
-                    if (content[scanner.currentTokenEndPosition - 1] == '\n') {
-                        if (content[scanner.currentTokenEndPosition - 2] == '\r') {
+                    if (content[scanner.currentTokenEndPosition] == '\n') {
+                        if (content[scanner.currentTokenEndPosition - 1] == '\r') {
                             dest.append("\r\n")
                         } else {
                             dest.append("\n")
