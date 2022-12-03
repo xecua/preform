@@ -25,12 +25,12 @@ class RevertCommitSquasher : RepositoryRewriter() {
         val commit = c?.commit ?: return super.rewriteParents(parents, c)
 
         if (parentCommitIdIfItRevertsParent != null) {
-            val newParents = commit.parents.flatMap {
+            val newParents = parents!!.flatMap {
                 if (it == parentCommitIdIfItRevertsParent) {
                     // it is guaranteed that it has only one parent
-                    it.getParent(0).parents.toList()
+                    parentCommitIdIfItRevertsParent!!.getParent(0).parents.toList()
                 } else {
-                    listOf(it as ObjectId)
+                    listOf(it)
                 }
             }.toTypedArray()
 

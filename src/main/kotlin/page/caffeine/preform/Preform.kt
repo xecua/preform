@@ -125,12 +125,9 @@ class Preform : Callable<Int> {
         }
 
         var repoName = source.name
+        directories.add(source)
         filters.forEachIndexed { i, filter ->
-            val src = if (i == 0) {
-                source
-            } else {
-                directories[i - 1]
-            }
+            val src = directories[i]
 
             val dst = if (saveRepository) {
                 repoName += "-${filters::class.simpleName}"
