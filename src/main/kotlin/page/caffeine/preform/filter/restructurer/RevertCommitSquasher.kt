@@ -134,6 +134,6 @@ class RevertCommitSquasher : RepositoryRewriter() {
     companion object {
         private val logger = KotlinLogging.logger {}
 
-        val REVERTING_COMMIT_MESSAGE_PATTERN = Regex("""^Revert ".*This reverts commit ([0-9a-f]{40}).*""")
+        val REVERTING_COMMIT_MESSAGE_PATTERN = Regex("""^Revert ".*This reverts commit ([0-9a-f]{40}).*""", RegexOption.DOT_MATCHES_ALL)
     }
 }
