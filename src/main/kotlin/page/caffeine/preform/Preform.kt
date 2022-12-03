@@ -148,7 +148,7 @@ class Preform : Callable<Int> {
 
             if (i == filters.size - 1 && isDuplicating) {
                 log.info { "Duplicating source repository $source to ${directories.last()}" }
-                source.copyTo(directories.last(), true)
+                source.copyRecursively(directories.last(), true)
             }
 
             createRepository(src, false).use { source ->
