@@ -14,7 +14,7 @@ import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 
 @Command(
-    name = "RevertCommit",
+    name = "RevertCommitSquashert c",
     description = ["Squash reverting and reverted commits", "Currently supporting consecutive pair."]
 )
 class RevertCommitSquasher : RepositoryRewriter() {
