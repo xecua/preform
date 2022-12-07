@@ -22,6 +22,12 @@ class RevertCommitMarker : RepositoryRewriter() {
     private val revertingCommits = mutableSetOf<ObjectId>()
     private val revertedCommits = mutableSetOf<ObjectId>()
 
+    @Option(
+        names = ["--all-files"],
+        description = ["Consider changes for all kinds of files (Default: only .java files)"]
+    )
+    var considerAllFiles = false
+
     override fun rewriteCommits(c: Context?) {
         super.rewriteCommits(c)
         rewriting = true
@@ -62,7 +68,7 @@ class RevertCommitMarker : RepositoryRewriter() {
             val changeVector = ChangeVector()
             diffs.forEach { it ->
                 // 両方が対象のソースコードでない場合は無視するんだっけ
-                if (!it.oldPath.endsWith(".java") || !it.newPath.endsWith(".java")) {
+                if ((!it.oldPath.endsWith(".java") || !it.newPath.endsWith(".java")) && !considerAllFiles) {
                     return@forEach
                 }
 

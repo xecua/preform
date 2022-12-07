@@ -12,6 +12,7 @@ import org.eclipse.jgit.util.io.DisabledOutputStream
 import page.caffeine.preform.filter.marker.ChangeVector
 import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 
 @Command(
     name = "RevertCommitSquasher",
@@ -20,6 +21,12 @@ import picocli.CommandLine.Command
 class RevertCommitSquasher : RepositoryRewriter() {
     private var previousCommitChangeVector = ChangeVector()
     private var parentCommitIdIfItRevertsParent: RevCommit? = null
+
+    @Option(
+        names = ["--all-files"],
+        description = ["Consider changes for all kinds of files (Default: only .java files)"]
+    )
+    var considerAllFiles = false
 
     override fun rewriteParents(parents: Array<out ObjectId>?, c: Context?): Array<ObjectId> {
         val commit = c?.commit ?: return super.rewriteParents(parents, c)
@@ -62,7 +69,7 @@ class RevertCommitSquasher : RepositoryRewriter() {
         val currentCommitChangeVector = ChangeVector()
         diffs.forEach { it ->
             // 両方が対象のソースコードでない場合は無視するんだっけ
-            if (!it.oldPath.endsWith(".java") || !it.newPath.endsWith(".java")) {
+            if ((!it.oldPath.endsWith(".java") || !it.newPath.endsWith(".java")) && !considerAllFiles) {
                 return@forEach
             }
 
