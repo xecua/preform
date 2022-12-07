@@ -10,122 +10,133 @@ import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.util.io.DisabledOutputStream
 import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 
-@Command(name = "RevertCommitMarker", description = ["Mark revert commits.", "Currently supporting consecutive pair."])
+@Command(name = "RevertCommitMarker", description = ["Mark revert commits."])
 class RevertCommitMarker : RepositoryRewriter() {
-    // commit vector
-    // 並列処理を前提としないのならこいつは直接の親になるはず(逆に言うと並列だと一致しない可能性がある)
-    // 富豪プログラミングするなら別にそれでもいい
-    private var previousCommitChangeVector = ChangeVector()
+    // We need to traverse twice to mark reverted commits, and the first one must not rewrite any object
+    private var rewriting = false
 
+    private val changeVectors = mutableMapOf<ChangeVector, ObjectId>()
+
+    private val revertingCommits = mutableSetOf<ObjectId>()
     private val revertedCommits = mutableSetOf<ObjectId>()
 
     override fun rewriteCommits(c: Context?) {
         super.rewriteCommits(c)
+        rewriting = true
         super.rewriteCommits(c) // traverse twice to mark reverted commits
     }
 
     override fun rewriteCommitMessage(message: String?, c: Context?): String {
         val commit = c?.commit ?: return super.rewriteCommitMessage(message, c)
-
-        if (revertedCommits.contains(commit)) {
-            return annotateComment(message ?: "", false)
-        }
-
-        if (commit.parentCount != 1) {
-            return super.rewriteCommitMessage(message, c)
-        }
-
-        val parentCommit = commit.getParent(0)
-
-        // as same condition as Wen et al. (2022).
-        if (message != null) {
-            val match = REVERTING_COMMIT_MESSAGE_PATTERN.matchEntire(message)
-            if (match != null && match.groupValues[1] == parentCommit.name) {
-                revertedCommits.add(parentCommit)
-                return annotateComment(message, true)
-            }
-        }
-
-         val df = DiffFormatter(DisabledOutputStream.INSTANCE)
-        df.setRepository(sourceRepo)
-        val diffs = df.scan(parentCommit.tree, commit.tree)
-
-        // 多分遅いのでなんか工夫した方がいい
-        // あとこれテストどうしよ
-        val currentCommitChangeVector = ChangeVector()
-        diffs.forEach { it ->
-            // 両方が対象のソースコードでない場合は無視するんだっけ
-            if (!it.oldPath.endsWith(".java") || !it.newPath.endsWith(".java")) {
-                return@forEach
+        if (rewriting) {
+            return if (revertingCommits.contains(commit)) {
+                annotateComment(message ?: "", true)
+            } else if (revertedCommits.contains(commit)) {
+                annotateComment(message ?: "", false)
+            } else super.rewriteCommitMessage(message, c)
+        } else {
+            if (commit.parentCount != 1) {
+                return super.rewriteCommitMessage(message, c)
             }
 
-            when (it.changeType!!) {
-                DiffEntry.ChangeType.ADD, DiffEntry.ChangeType.COPY -> {
-                    currentCommitChangeVector.addedFiles.add(it.newPath)
+            // as same condition as Wen et al. (2022).
+            if (message != null) {
+                // Not considering this being reverted in second condition(ChangeVector-based).
+                val match = REVERTING_COMMIT_MESSAGE_PATTERN.matchEntire(message)
+                if (match != null) {
+                    revertingCommits.add(commit)
+                    revertedCommits.add(ObjectId.fromString(match.groupValues[1]))
+                    return super.rewriteCommitMessage(message, c)
+                }
+            }
+
+            val parentCommit = commit.getParent(0)
+            val df = DiffFormatter(DisabledOutputStream.INSTANCE)
+            df.setRepository(sourceRepo)
+            val diffs = df.scan(parentCommit.tree, commit.tree)
+
+            // 多分遅いのでなんか工夫した方がいい
+            // あとこれテストどうしよ
+            val changeVector = ChangeVector()
+            diffs.forEach { it ->
+                // 両方が対象のソースコードでない場合は無視するんだっけ
+                if (!it.oldPath.endsWith(".java") || !it.newPath.endsWith(".java")) {
+                    return@forEach
                 }
 
-                DiffEntry.ChangeType.DELETE -> {
-                    currentCommitChangeVector.deletedFiles.add(it.oldPath)
-                }
-
-                DiffEntry.ChangeType.RENAME -> {
-                    currentCommitChangeVector.deletedFiles.add(it.oldPath)
-                    currentCommitChangeVector.addedFiles.add(it.newPath)
-                    // 内容の修正が入ることもある?
-                }
-
-                DiffEntry.ChangeType.MODIFY -> {
-                    val fileName = it.newPath
-
-                    val edits = df.toFileHeader(it).toEditList()
-                    edits.forEach { edit ->
-                        when (edit.type!!) {
-                            Edit.Type.INSERT -> {
-                                val newRawText = RawText(source.readBlob(it.newId.toObjectId(), c))
-
-                                currentCommitChangeVector.addedCodes.addAll((edit.beginB until edit.endB).map {
-                                    "$fileName:${newRawText.getString(it)}"
-                                })
-                            }
-
-                            Edit.Type.DELETE -> {
-                                val oldRawText = RawText(source.readBlob(it.oldId.toObjectId(), c))
-
-                                currentCommitChangeVector.deletedCodes.addAll((edit.beginA until edit.endA).map {
-                                    "$fileName:${oldRawText.getString(it)}"
-                                })
-                            }
-
-                            Edit.Type.REPLACE -> {
-                                val newRawText = RawText(source.readBlob(it.newId.toObjectId(), c))
-                                val oldRawText = RawText(source.readBlob(it.oldId.toObjectId(), c))
-
-                                currentCommitChangeVector.addedCodes.addAll((edit.beginB until edit.endB).map {
-                                    "$fileName:${newRawText.getString(it)}"
-                                })
-                                currentCommitChangeVector.deletedCodes.addAll((edit.beginA until edit.endA).map {
-                                    "$fileName:${oldRawText.getString(it)}"
-                                })
-                            }
-
-                            Edit.Type.EMPTY -> {}
-                        }
+                when (it.changeType!!) {
+                    DiffEntry.ChangeType.ADD, DiffEntry.ChangeType.COPY -> {
+                        changeVector.addedFiles.add(it.newPath)
                     }
 
+                    DiffEntry.ChangeType.DELETE -> {
+                        changeVector.deletedFiles.add(it.oldPath)
+                    }
+
+                    DiffEntry.ChangeType.RENAME -> {
+                        changeVector.deletedFiles.add(it.oldPath)
+                        changeVector.addedFiles.add(it.newPath)
+                        // 内容の修正が入ることもある?
+                    }
+
+                    DiffEntry.ChangeType.MODIFY -> {
+                        val fileName = it.newPath
+
+                        val edits = df.toFileHeader(it).toEditList()
+                        edits.forEach { edit ->
+                            when (edit.type!!) {
+                                Edit.Type.INSERT -> {
+                                    val newRawText = RawText(source.readBlob(it.newId.toObjectId(), c))
+
+                                    changeVector.addedCodes.addAll((edit.beginB until edit.endB).map {
+                                        "$fileName:${newRawText.getString(it)}"
+                                    })
+                                }
+
+                                Edit.Type.DELETE -> {
+                                    val oldRawText = RawText(source.readBlob(it.oldId.toObjectId(), c))
+
+                                    changeVector.deletedCodes.addAll((edit.beginA until edit.endA).map {
+                                        "$fileName:${oldRawText.getString(it)}"
+                                    })
+                                }
+
+                                Edit.Type.REPLACE -> {
+                                    val newRawText = RawText(source.readBlob(it.newId.toObjectId(), c))
+                                    val oldRawText = RawText(source.readBlob(it.oldId.toObjectId(), c))
+
+                                    changeVector.addedCodes.addAll((edit.beginB until edit.endB).map {
+                                        "$fileName:${newRawText.getString(it)}"
+                                    })
+                                    changeVector.deletedCodes.addAll((edit.beginA until edit.endA).map {
+                                        "$fileName:${oldRawText.getString(it)}"
+                                    })
+                                }
+
+                                Edit.Type.EMPTY -> {}
+                            }
+                        }
+
+                    }
                 }
             }
-        }
 
-        // check if this commit reverts previous commit
-        if (currentCommitChangeVector.reverts(previousCommitChangeVector)) {
-            previousCommitChangeVector = currentCommitChangeVector
-            revertedCommits.add(parentCommit)
-            return annotateComment(message ?: "", true)
-        }
+            // check if this commit reverts previous commit
+            val reversedChangeVector = changeVector.reversed()
+            if (changeVectors.contains(reversedChangeVector)) {
+                revertedCommits.add(changeVectors[reversedChangeVector]!!)
+                revertingCommits.add(commit)
+            }
 
-        previousCommitChangeVector = currentCommitChangeVector
-        return super.rewriteCommitMessage(message, c)
+            if (changeVector.isNotEmpty()) {
+                // Prevent empty commit being inserted into candidates
+                changeVectors[changeVector] = commit
+            }
+
+            return super.rewriteCommitMessage(message, c)
+        }
     }
 
     private fun annotateComment(message: String, reverting: Boolean): String = """
@@ -137,7 +148,8 @@ class RevertCommitMarker : RepositoryRewriter() {
     companion object {
         private val logger = KotlinLogging.logger {}
 
-        val REVERTING_COMMIT_MESSAGE_PATTERN = Regex("""^Revert ".*This reverts commit ([0-9a-f]{40}).*""", RegexOption.DOT_MATCHES_ALL)
+        val REVERTING_COMMIT_MESSAGE_PATTERN =
+            Regex("""^Revert ".*This reverts commit ([0-9a-f]{40}).*""", RegexOption.DOT_MATCHES_ALL)
     }
 }
 
@@ -160,13 +172,21 @@ data class ChangeVector(
             this.deletedCodes == other.deletedCodes
     }
 
+    fun isEmpty(): Boolean =
+        this.addedFiles.isEmpty() && this.deletedFiles.isEmpty() && this.addedCodes.isEmpty() && this.deletedCodes.isEmpty()
+
+    fun isNotEmpty(): Boolean = !this.isEmpty()
+
+    fun reversed(): ChangeVector = ChangeVector(
+        addedFiles = this.deletedFiles,
+        deletedFiles = this.addedFiles,
+        addedCodes = this.deletedCodes,
+        deletedCodes = this.addedCodes
+    )
+
     // 全部空だと真になっちゃうのだけ回避
     fun reverts(other: ChangeVector): Boolean =
-        !(this.addedFiles.isEmpty() && other.addedFiles.isEmpty() &&
-            this.deletedFiles.isEmpty() && other.deletedFiles.isEmpty() &&
-            this.addedCodes.isEmpty() && other.addedCodes.isEmpty() &&
-            this.deletedCodes.isEmpty() && other.deletedCodes.isEmpty()
-            ) &&
+        !(this.isEmpty() && other.isEmpty()) &&
             this.addedFiles == other.deletedFiles &&
             this.deletedFiles == other.addedFiles &&
             this.addedCodes == other.deletedCodes &&
