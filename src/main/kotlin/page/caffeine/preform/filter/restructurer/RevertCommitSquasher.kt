@@ -32,10 +32,10 @@ class RevertCommitSquasher : RepositoryRewriter() {
                 } else {
                     listOf(it)
                 }
-            }.toTypedArray()
+            }
 
             parentCommitIdIfItRevertsParent = null
-            return newParents
+            return newParents.map { commitMapping[it] ?: it }.toTypedArray()
         }
 
         if (commit.parentCount != 1) {
@@ -53,7 +53,7 @@ class RevertCommitSquasher : RepositoryRewriter() {
             }
         }
 
-         val df = DiffFormatter(DisabledOutputStream.INSTANCE)
+        val df = DiffFormatter(DisabledOutputStream.INSTANCE)
         df.setRepository(sourceRepo)
         val diffs = df.scan(parentCommit.tree, commit.tree)
 
@@ -134,6 +134,7 @@ class RevertCommitSquasher : RepositoryRewriter() {
     companion object {
         private val logger = KotlinLogging.logger {}
 
-        val REVERTING_COMMIT_MESSAGE_PATTERN = Regex("""^Revert ".*This reverts commit ([0-9a-f]{40}).*""", RegexOption.DOT_MATCHES_ALL)
+        val REVERTING_COMMIT_MESSAGE_PATTERN =
+            Regex("""^Revert ".*This reverts commit ([0-9a-f]{40}).*""", RegexOption.DOT_MATCHES_ALL)
     }
 }
