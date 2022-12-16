@@ -13,6 +13,7 @@ import picocli.CommandLine
 import java.nio.charset.StandardCharsets
 
 @CommandLine.Command(
+    name = "TrivialkeywordNormalizer",
     description = [
         "Suppress keyword-related trivial changes.",
         "`this` receiver of fields, `super()` call in default constructor, `return` at the last of void method, will be inserted, removed, removed (resp.)"

@@ -12,7 +12,7 @@ import page.caffeine.preform.util.generateParser
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
 
-@Command(description = ["Try to fully-qualify all class names."])
+@Command(name = "TypeNameQualifier", description = ["Try to fully-qualify all class names."])
 class TypeNameQualifier : RepositoryRewriter() {
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {
         val fileName =

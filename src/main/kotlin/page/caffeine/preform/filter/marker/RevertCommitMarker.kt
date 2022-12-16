@@ -12,7 +12,7 @@ import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
-@Command(description = ["Mark revert commits."])
+@Command(name = "RevertCommitMarker", description = ["Mark revert commits."])
 class RevertCommitMarker : RepositoryRewriter() {
     // We need to traverse twice to mark reverted commits, and the first one must not rewrite any object
     private var rewriting = false

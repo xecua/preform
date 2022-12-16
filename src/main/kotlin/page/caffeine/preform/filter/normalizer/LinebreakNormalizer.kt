@@ -8,7 +8,7 @@ import picocli.CommandLine
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
 
-@Command
+@Command(name = "LinebreakNormalizer", description = ["Unify line break character"])
 class LinebreakNormalizer : RepositoryRewriter() {
     @CommandLine.Option(
         names = ["--to"],

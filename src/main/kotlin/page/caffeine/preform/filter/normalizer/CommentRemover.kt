@@ -10,6 +10,7 @@ import picocli.CommandLine
 import java.nio.charset.StandardCharsets
 
 @CommandLine.Command(
+    name = "CommentRemover",
     description = ["Remove all comments from source code.", "Inspired by https://github.com/YoshikiHigo/CommentRemover"]
 )
 class CommentRemover : RepositoryRewriter() {

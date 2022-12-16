@@ -4,7 +4,7 @@ import mu.KotlinLogging
 import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 
-@Command(description = ["Do nothing (for testing)"])
+@Command(name = "PassThrough", description = ["Do nothing (for testing)"])
 class PassThrough : RepositoryRewriter() {
     init {
         logger.info { "PassThrough" }

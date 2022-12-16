@@ -15,6 +15,7 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
 @Command(
+    name = "RevertCommitSquasher",
     description = ["Squash reverting and reverted commits", "Currently supporting consecutive pair."]
 )
 class RevertCommitSquasher : RepositoryRewriter() {
