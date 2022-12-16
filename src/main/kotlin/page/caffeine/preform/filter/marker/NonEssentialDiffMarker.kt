@@ -76,9 +76,6 @@ class NonEssentialDiffMarker : RepositoryRewriter() {
     """.trimMargin()
 
     companion object {
-        val logger = KotlinLogging.logger {}
-        // .also {
-        //     (it.underlyingLogger as Logger).level = Level.DEBUG
-        // }
+        private val logger = KotlinLogging.logger {}
     }
 }

@@ -2,23 +2,8 @@ package page.caffeine.preform.filter.normalizer
 
 import jp.ac.titech.c.se.stein.core.Context
 import jp.ac.titech.c.se.stein.core.EntrySet
-import org.eclipse.jdt.core.dom.ASTNode
-import org.eclipse.jdt.core.dom.ASTVisitor
-import org.eclipse.jdt.core.dom.AssertStatement
-import org.eclipse.jdt.core.dom.CompilationUnit
-import org.eclipse.jdt.core.dom.ConstructorInvocation
-import org.eclipse.jdt.core.dom.ExpressionStatement
-import org.eclipse.jdt.core.dom.IfStatement
-import org.eclipse.jdt.core.dom.MethodDeclaration
-import org.eclipse.jdt.core.dom.QualifiedName
-import org.eclipse.jdt.core.dom.ReturnStatement
-import org.eclipse.jdt.core.dom.SimpleName
-import org.eclipse.jdt.core.dom.SuperConstructorInvocation
-import org.eclipse.jdt.core.dom.SwitchStatement
-import org.eclipse.jdt.core.dom.ThrowStatement
-import org.eclipse.jdt.core.dom.TryStatement
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement
+import mu.KotlinLogging
+import org.eclipse.jdt.core.dom.*
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite
 import org.eclipse.jface.text.Document
 import org.eclipse.jgit.lib.ObjectId
@@ -50,6 +35,10 @@ class LocalVariableInliner : RepositoryRewriter() {
         val visitor = LocalVariableVisitor(content, tree)
         tree.accept(visitor)
         return visitor.getRewrittenContent()
+    }
+    
+    companion object {
+        private val logger = KotlinLogging.logger {}
     }
 
 }

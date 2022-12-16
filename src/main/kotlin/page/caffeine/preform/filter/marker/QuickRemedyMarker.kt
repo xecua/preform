@@ -52,7 +52,7 @@ class QuickRemedyMarker : RepositoryRewriter() {
     }
 
     companion object {
-        val logger = KotlinLogging.logger {}
+        private val logger = KotlinLogging.logger {}
 
         val THRESHOLD_DURATION: Duration = Duration.ofMinutes(5)
         val MESSAGE_PATTERN = Regex("""(former|last|prev|previous) commit""")
