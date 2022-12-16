@@ -1,2 +1,2 @@
 # preform
-preform: Preprocessing repositories for Repository Mining
+[日本語版READMEはこちら](./README_ja.md)
