@@ -4,7 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 class RemoveCommentTests : FunSpec({
-    val it = RemoveComment()
+    val it = CommentRemover()
 
     test("check basic functionality") {
         it.rewriteContent(

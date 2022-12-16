@@ -12,12 +12,12 @@ import org.slf4j.LoggerFactory
 import page.caffeine.preform.filter.marker.NonEssentialDiffMarker
 import page.caffeine.preform.filter.marker.QuickRemedyMarker
 import page.caffeine.preform.filter.marker.RevertCommitMarker
-import page.caffeine.preform.filter.normalizer.Format
-import page.caffeine.preform.filter.normalizer.InlineLocalVariable
-import page.caffeine.preform.filter.normalizer.Linebreak
-import page.caffeine.preform.filter.normalizer.PassThrough
-import page.caffeine.preform.filter.normalizer.RemoveComment
-import page.caffeine.preform.filter.normalizer.TrivialKeyword
+import page.caffeine.preform.filter.normalizer.Formatter
+import page.caffeine.preform.filter.normalizer.LocalVariableInliner
+import page.caffeine.preform.filter.normalizer.LinebreakNormalizer
+import page.caffeine.preform.filter.PassThrough
+import page.caffeine.preform.filter.normalizer.CommentRemover
+import page.caffeine.preform.filter.normalizer.TrivialKeywordNormalizer
 import page.caffeine.preform.filter.restructurer.RevertCommitSquasher
 import picocli.CommandLine.Command
 import picocli.CommandLine.ITypeConverter
@@ -34,16 +34,16 @@ import java.util.concurrent.Callable
     mixinStandardHelpOptions = true,
     subcommandsRepeatable = true,
     subcommands = [
-        Format::class,
+        Formatter::class,
         PassThrough::class,
-        Linebreak::class,
+        LinebreakNormalizer::class,
         QuickRemedyMarker::class,
-        InlineLocalVariable::class,
-        RemoveComment::class,
+        LocalVariableInliner::class,
+        CommentRemover::class,
         RevertCommitSquasher::class,
         RevertCommitMarker::class,
         NonEssentialDiffMarker::class,
-        TrivialKeyword::class,
+        TrivialKeywordNormalizer::class,
     ]
 )
 class Preform : Callable<Int> {

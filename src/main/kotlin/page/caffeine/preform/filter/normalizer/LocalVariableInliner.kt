@@ -27,8 +27,8 @@ import page.caffeine.preform.util.generateParser
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
 
-@Command(name = "InlineLocalVariable", description = ["Revert Local variable extraction by inlining it"])
-class InlineLocalVariable : RepositoryRewriter() {
+@Command(description = ["Revert Local variable extraction by inlining it"])
+class LocalVariableInliner : RepositoryRewriter() {
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {
         val fileName =
             (c?.get(Context.Key.entry) as? EntrySet.Entry)?.name?.lowercase() ?: return super.rewriteBlob(blobId, c)

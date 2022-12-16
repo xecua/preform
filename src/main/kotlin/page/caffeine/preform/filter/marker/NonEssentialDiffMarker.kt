@@ -14,7 +14,6 @@ import picocli.CommandLine.Command
 
 
 @Command(
-    name = "NonEssentialDiffMarker",
     description = ["Mark commits that contain non-essential changes.", "Currently supported only Rename related ones (Detected by RefactoringMiner https://github.com/tsantalis/RefactoringMiner)."]
 )
 class NonEssentialDiffMarker : RepositoryRewriter() {

@@ -7,7 +7,7 @@ import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 import java.time.Duration
 
-@Command(name = "QuickRemedyMarker", description = ["Mark Quick Remedy Commits."])
+@Command(description = ["Mark Quick Remedy Commits."])
 class QuickRemedyMarker : RepositoryRewriter() {
     override fun rewriteCommitMessage(message: String?, c: Context?): String {
         val commit = c?.commit ?: return super.rewriteCommitMessage(message, c)

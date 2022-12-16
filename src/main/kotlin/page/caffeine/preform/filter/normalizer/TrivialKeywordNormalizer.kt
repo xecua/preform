@@ -25,8 +25,13 @@ import page.caffeine.preform.util.generateParser
 import picocli.CommandLine
 import java.nio.charset.StandardCharsets
 
-@CommandLine.Command(name = "TrivialKeyword", description = ["Normalize trivial keyword"])
-class TrivialKeyword : RepositoryRewriter() {
+@CommandLine.Command(
+    description = [
+        "Suppress keyword-related trivial changes.",
+        "`this` receiver of fields, `super()` call in default constructor, `return` at the last of void method, will be inserted, removed, removed (resp.)"
+    ]
+)
+class TrivialKeywordNormalizer : RepositoryRewriter() {
     // @Option(
     //     names = ["--keyword"],
     //     description = ["Apply keyword supplementation. Default: \${DEFAULT-VALUE}"]

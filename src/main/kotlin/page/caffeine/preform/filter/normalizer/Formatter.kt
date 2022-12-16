@@ -10,8 +10,8 @@ import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
 
-@Command(name = "Format")
-class Format : RepositoryRewriter() {
+@Command(description = ["Suppress whitespace related changes by formatting all files in each snapshot"])
+class Formatter : RepositoryRewriter() {
     override fun rewriteBlob(blobId: ObjectId, c: Context): ObjectId {
         if (!c.entry.name.lowercase().endsWith(".java")) {
             return super.rewriteBlob(blobId, c)

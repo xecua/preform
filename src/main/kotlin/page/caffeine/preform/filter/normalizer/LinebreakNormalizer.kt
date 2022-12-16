@@ -8,8 +8,8 @@ import picocli.CommandLine
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
 
-@Command(name = "Linebreak")
-class Linebreak : RepositoryRewriter() {
+@Command
+class LinebreakNormalizer : RepositoryRewriter() {
     @CommandLine.Option(
         names = ["--to"],
         description = ["Type of line break convert into."],

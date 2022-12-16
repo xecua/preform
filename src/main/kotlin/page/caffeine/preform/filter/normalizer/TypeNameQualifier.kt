@@ -17,8 +17,8 @@ import page.caffeine.preform.util.generateParser
 import picocli.CommandLine.Command
 import java.nio.charset.StandardCharsets
 
-@Command(name = "TrivialType", description = ["Normalize types"])
-class TrivialType : RepositoryRewriter() {
+@Command(description = ["Try to fully-qualify all class names."])
+class TypeNameQualifier : RepositoryRewriter() {
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {
         val fileName =
             (c?.get(Context.Key.entry) as? EntrySet.Entry)?.name?.lowercase() ?: return super.rewriteBlob(blobId, c)

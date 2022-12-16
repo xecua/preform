@@ -4,7 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 class InlineLocalVariableTests : FunSpec({
-    val it = InlineLocalVariable()
+    val it = LocalVariableInliner()
 
     context("invalid cases") {
         test("simple statements") {

@@ -4,7 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 class TrivialTypeTests : FunSpec ({
-    val it = TrivialType()
+    val it = TypeNameQualifier()
     
     context("invalid cases") {
         test("there is a wildcard import") {

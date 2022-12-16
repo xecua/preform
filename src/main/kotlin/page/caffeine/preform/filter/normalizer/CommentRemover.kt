@@ -10,10 +10,9 @@ import picocli.CommandLine
 import java.nio.charset.StandardCharsets
 
 @CommandLine.Command(
-    name = "RemoveComment",
     description = ["Remove all comments from source code.", "Inspired by https://github.com/YoshikiHigo/CommentRemover"]
 )
-class RemoveComment : RepositoryRewriter() {
+class CommentRemover : RepositoryRewriter() {
     override fun rewriteBlob(blobId: ObjectId?, c: Context?): ObjectId {
         val fileName = (c?.get(Context.Key.entry) as? Entry)?.name?.lowercase() ?: return super.rewriteBlob(blobId, c)
         if (!fileName.endsWith(".java")) {
