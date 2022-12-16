@@ -173,9 +173,9 @@ data class ChangeVector(
             return false
         }
         return this.addedFiles == other.addedFiles &&
-            this.deletedFiles == other.deletedFiles &&
-            this.addedCodes == other.addedCodes &&
-            this.deletedCodes == other.deletedCodes
+                this.deletedFiles == other.deletedFiles &&
+                this.addedCodes == other.addedCodes &&
+                this.deletedCodes == other.deletedCodes
     }
 
     fun isEmpty(): Boolean =
@@ -193,10 +193,10 @@ data class ChangeVector(
     // 全部空だと真になっちゃうのだけ回避
     fun reverts(other: ChangeVector): Boolean =
         !(this.isEmpty() && other.isEmpty()) &&
-            this.addedFiles == other.deletedFiles &&
-            this.deletedFiles == other.addedFiles &&
-            this.addedCodes == other.deletedCodes &&
-            this.deletedCodes == other.addedCodes
+                this.addedFiles == other.deletedFiles &&
+                this.deletedFiles == other.addedFiles &&
+                this.addedCodes == other.deletedCodes &&
+                this.deletedCodes == other.addedCodes
 
     // auto-generated
     override fun hashCode(): Int {

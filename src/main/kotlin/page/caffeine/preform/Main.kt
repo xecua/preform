@@ -23,7 +23,6 @@ fun main(args: Array<String>) {
             val userObject = it.commandSpec().userObject() as RepositoryRewriter
             preformApp.filters.add(userObject)
         }
-        
 
         return@setExecutionStrategy try {
             preformApp.call()

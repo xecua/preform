@@ -4,12 +4,7 @@ import jp.ac.titech.c.se.stein.core.Context
 import jp.ac.titech.c.se.stein.core.EntrySet
 import jp.ac.titech.c.se.stein.core.RepositoryRewriter
 import mu.KotlinLogging
-import org.eclipse.jdt.core.dom.ASTVisitor
-import org.eclipse.jdt.core.dom.CompilationUnit
-import org.eclipse.jdt.core.dom.ImportDeclaration
-import org.eclipse.jdt.core.dom.Name
-import org.eclipse.jdt.core.dom.PackageDeclaration
-import org.eclipse.jdt.core.dom.SimpleType
+import org.eclipse.jdt.core.dom.*
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite
 import org.eclipse.jface.text.Document
 import org.eclipse.jgit.lib.ObjectId
@@ -45,10 +40,10 @@ class TypeNameQualifier : RepositoryRewriter() {
             logger.warn(e) { "Ignoring." }
             return content
         }
-        
+
         val visitor = TrivialTypeVisitor(content, tree)
         tree.accept(visitor)
-       return visitor.getRewrittenContent()
+        return visitor.getRewrittenContent()
     }
 
 
@@ -57,11 +52,11 @@ class TypeNameQualifier : RepositoryRewriter() {
     }
 }
 
-class TrivialTypeVisitor(private val content: String, rootNode: CompilationUnit): ASTVisitor() {
+class TrivialTypeVisitor(private val content: String, rootNode: CompilationUnit) : ASTVisitor() {
     private var astRewrite = ASTRewrite.create(rootNode.ast)
     private var packageName: String? = null
     private val importedTypes: MutableMap<String, Name> = mutableMapOf()
-    
+
     fun getRewrittenContent(): String {
         val doc = Document(content)
         val edits = astRewrite.rewriteAST(doc, null)
@@ -73,7 +68,7 @@ class TrivialTypeVisitor(private val content: String, rootNode: CompilationUnit)
         this.packageName = node.name.fullyQualifiedName
         return super.visit(node)
     }
-    
+
     override fun visit(node: ImportDeclaration): Boolean {
         if (!node.isStatic && !node.isOnDemand) {
             val lastPart = node.name.fullyQualifiedName.split(".").last()
@@ -83,7 +78,7 @@ class TrivialTypeVisitor(private val content: String, rootNode: CompilationUnit)
         }
         return super.visit(node)
     }
-    
+
     override fun visit(node: SimpleType): Boolean {
         val name = node.name.fullyQualifiedName
         if (importedTypes.containsKey(name)) {
@@ -91,10 +86,10 @@ class TrivialTypeVisitor(private val content: String, rootNode: CompilationUnit)
             val newNode = node.parent.ast.newSimpleType(qualifiedName)
             astRewrite.replace(node, newNode, null)
         }
-        
+
         return super.visit(node)
     }
-    
+
     companion object {
         private val logger = KotlinLogging.logger {}
     }

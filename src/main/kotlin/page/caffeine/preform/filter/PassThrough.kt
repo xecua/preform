@@ -1,7 +1,7 @@
-package page.caffeine.preform.filter.normalizer
+package page.caffeine.preform.filter
 
-import page.caffeine.preform.util.RepositoryRewriter
 import mu.KotlinLogging
+import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 
 @Command(description = ["Do nothing (for testing)"])
