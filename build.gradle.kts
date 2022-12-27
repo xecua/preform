@@ -17,13 +17,13 @@ val kotestVersion = "5.5.4"
 
 dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
-    implementation("ch.qos.logback:logback-classic:1.4.4")
+    implementation("ch.qos.logback:logback-classic:1.4.5")
 
     implementation("com.github.sh5i:git-stein:v0.6.0")
 
     implementation("info.picocli:picocli:4.7.0")
-    implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.31.0")
-    implementation("org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r")
+    implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.32.0")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.4.0.202211300538-r")
     
     implementation("com.github.tsantalis:refactoring-miner:2.3.2")
 
@@ -34,7 +34,7 @@ dependencies {
 kotlin {
     // toolchain https://blog.jetbrains.com/kotlin/2021/11/gradle-jvm-toolchain-support-in-the-kotlin-plugin/
     jvmToolchain {
-        (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(11))
     }
 }
 
