@@ -12,12 +12,8 @@ import org.slf4j.LoggerFactory
 import page.caffeine.preform.filter.marker.NonEssentialDiffMarker
 import page.caffeine.preform.filter.marker.QuickRemedyCommitMarker
 import page.caffeine.preform.filter.marker.RevertCommitMarker
-import page.caffeine.preform.filter.normalizer.Formatter
-import page.caffeine.preform.filter.normalizer.LocalVariableInliner
-import page.caffeine.preform.filter.normalizer.LinebreakNormalizer
 import page.caffeine.preform.filter.PassThrough
-import page.caffeine.preform.filter.normalizer.CommentRemover
-import page.caffeine.preform.filter.normalizer.TrivialKeywordNormalizer
+import page.caffeine.preform.filter.normalizer.*
 import page.caffeine.preform.filter.restructurer.RevertCommitSquasher
 import picocli.CommandLine.Command
 import picocli.CommandLine.ITypeConverter
@@ -44,6 +40,7 @@ import java.util.concurrent.Callable
         RevertCommitMarker::class,
         NonEssentialDiffMarker::class,
         TrivialKeywordNormalizer::class,
+        TypeNameQualifier::class,
     ]
 )
 class Preform : Callable<Int> {
