@@ -127,7 +127,7 @@ class Preform : Callable<Int> {
             val src = directories[i]
 
             val dst = if (saveRepository) {
-                repoName += "-${filters::class.simpleName}"
+                repoName += "-${filter::class.simpleName}"
                 target.resolve(repoName)
             } else {
                 if (i == filters.size - 1) {
