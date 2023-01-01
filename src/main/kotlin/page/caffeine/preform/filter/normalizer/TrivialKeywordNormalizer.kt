@@ -76,7 +76,6 @@ class TrivialKeywordVisitor(private val content: String, rootNode: CompilationUn
 
     override fun visit(node: MethodDeclaration): Boolean {
         val body = node.body ?: return super.visit(node)
-
         @Suppress("UNCHECKED_CAST") val statements = body.statements() as List<Statement>
 
         // Redundant default super constructor invocation in default constructor
