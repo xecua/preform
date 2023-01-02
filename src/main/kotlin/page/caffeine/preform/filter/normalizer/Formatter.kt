@@ -31,7 +31,7 @@ class Formatter : RepositoryRewriter() {
 
         if (formattingOperation == null) {
             logger.warn("${blobId.name} was not able to format.")
-            return blobId
+            return super.rewriteBlob(blobId, c)
         }
 
         val doc = Document(content)
