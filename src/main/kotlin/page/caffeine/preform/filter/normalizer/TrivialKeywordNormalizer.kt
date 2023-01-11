@@ -90,7 +90,7 @@ class TrivialKeywordVisitor(private val content: String, rootNode: CompilationUn
         } else {
             // return type become null when this is constructor
             // Redundant return statement in void methods
-            if (node.returnType2 != null && node.returnType2.isPrimitiveType && (node.returnType2 as PrimitiveType).primitiveTypeCode == PrimitiveType.VOID) {
+            if (node.returnType2?.isPrimitiveType == true && (node.returnType2 as PrimitiveType).primitiveTypeCode == PrimitiveType.VOID) {
                 if (statements.isNotEmpty()) {
                     val last = statements.last()
                     if (last.nodeType == ASTNode.RETURN_STATEMENT) {
