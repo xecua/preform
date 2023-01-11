@@ -4,6 +4,7 @@ import jp.ac.titech.c.se.stein.core.Context
 import jp.ac.titech.c.se.stein.core.EntrySet.Entry
 import org.eclipse.jdt.core.ToolFactory
 import org.eclipse.jdt.core.compiler.ITerminalSymbols
+import org.eclipse.jdt.core.compiler.InvalidInputException
 import org.eclipse.jgit.lib.ObjectId
 import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine
@@ -38,7 +39,12 @@ class JavaCommentRemover {
         val dest = StringBuilder()
 
         while (true) {
-            val t = scanner.nextToken
+            val t = try {
+                scanner.nextToken
+            } catch (e: InvalidInputException) {
+                // Syntax error. Skip this file
+                return content
+            }
             if (t == ITerminalSymbols.TokenNameEOF) {
                 break
             }
