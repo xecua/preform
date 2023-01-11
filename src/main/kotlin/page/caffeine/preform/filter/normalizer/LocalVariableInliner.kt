@@ -32,11 +32,14 @@ class LocalVariableInliner : RepositoryRewriter() {
         val parser = generateParser()
         parser.setSource(content.toCharArray())
         val tree = parser.createAST(null) as CompilationUnit
+        if (tree.problems?.size != 0) {
+            return content
+        }
         val visitor = LocalVariableVisitor(content, tree)
         tree.accept(visitor)
         return visitor.getRewrittenContent()
     }
-    
+
     companion object {
         private val logger = KotlinLogging.logger {}
     }

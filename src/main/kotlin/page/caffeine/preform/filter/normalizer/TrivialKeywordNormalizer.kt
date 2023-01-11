@@ -13,7 +13,7 @@ import picocli.CommandLine
 import java.nio.charset.StandardCharsets
 
 @CommandLine.Command(
-    name = "TrivialkeywordNormalizer",
+    name = "KeywordNormalizer",
     description = [
         "Suppress keyword-related trivial changes.",
         "`this` receiver of fields, `super()` call in default constructor, `return` at the last of void method, will be inserted, removed, removed (resp.)"
@@ -48,12 +48,11 @@ class TrivialKeywordNormalizer : RepositoryRewriter() {
         parser.setBindingsRecovery(true)
         parser.setStatementsRecovery(true)
         parser.setUnitName("") // setting non-null make resolution work within file
-        val tree = try {
-            parser.createAST(null) as CompilationUnit
-        } catch (e: Exception) {
-            logger.warn(e) { "Ignoring." }
+        val tree = parser.createAST(null) as CompilationUnit 
+        if (tree.problems?.size != 0) {
             return content
         }
+
         val visitor = TrivialKeywordVisitor(content, tree)
         tree.accept(visitor)
         return visitor.getRewrittenContent()
