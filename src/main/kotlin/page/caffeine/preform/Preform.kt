@@ -9,6 +9,7 @@ import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import page.caffeine.preform.filter.HistorageWrapper
 import page.caffeine.preform.filter.marker.NonEssentialDiffMarker
 import page.caffeine.preform.filter.marker.RevertCommitMarker
 import page.caffeine.preform.filter.PassThrough
@@ -42,6 +43,7 @@ import java.util.concurrent.Callable
         NonEssentialDiffMarker::class,
         KeywordNormalizer::class,
         TypeNameQualifier::class,
+        HistorageWrapper::class
     ]
 )
 class Preform : Callable<Int> {
