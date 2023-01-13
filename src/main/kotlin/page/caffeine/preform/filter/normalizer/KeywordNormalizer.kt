@@ -53,7 +53,7 @@ class KeywordNormalizer : RepositoryRewriter() {
             return content
         }
 
-        val visitor = TrivialKeywordVisitor(content, tree)
+        val visitor = KeywordVisitor(content, tree)
         tree.accept(visitor)
         return visitor.getRewrittenContent()
     }
@@ -63,7 +63,7 @@ class KeywordNormalizer : RepositoryRewriter() {
     }
 }
 
-class TrivialKeywordVisitor(private val content: String, rootNode: CompilationUnit) : ASTVisitor() {
+class KeywordVisitor(private val content: String, rootNode: CompilationUnit) : ASTVisitor() {
     private var astRewrite = ASTRewrite.create(rootNode.ast)
 
     fun getRewrittenContent(): String {
