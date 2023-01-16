@@ -2,7 +2,7 @@ package page.caffeine.preform.filter.normalizer
 
 import jp.ac.titech.c.se.stein.core.Context
 import jp.ac.titech.c.se.stein.core.EntrySet
-import jp.ac.titech.c.se.stein.core.RepositoryRewriter
+import page.caffeine.preform.util.RepositoryRewriter
 import mu.KotlinLogging
 import org.eclipse.jdt.core.dom.*
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite
