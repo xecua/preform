@@ -39,7 +39,7 @@ import java.util.concurrent.Callable
         RevertCommitSquasher::class,
         RevertCommitMarker::class,
         NonEssentialDiffMarker::class,
-        TrivialKeywordNormalizer::class,
+        KeywordNormalizer::class,
         TypeNameQualifier::class,
     ]
 )

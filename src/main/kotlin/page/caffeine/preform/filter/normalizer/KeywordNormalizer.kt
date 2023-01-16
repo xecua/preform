@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets
         "`this` receiver of fields, `super()` call in default constructor, `return` at the last of void method, will be inserted, removed, removed (resp.)"
     ]
 )
-class TrivialKeywordNormalizer : RepositoryRewriter() {
+class KeywordNormalizer : RepositoryRewriter() {
     // @Option(
     //     names = ["--keyword"],
     //     description = ["Apply keyword supplementation. Default: \${DEFAULT-VALUE}"]

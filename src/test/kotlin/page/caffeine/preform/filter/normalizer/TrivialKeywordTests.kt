@@ -4,7 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 class TrivialKeywordTests : FunSpec({
-    val it = TrivialKeywordNormalizer()
+    val it = KeywordNormalizer()
 
     context("invalid cases") {
         test("non-void method") {
