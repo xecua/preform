@@ -17,7 +17,7 @@ class RevertCommitMarker : RepositoryRewriter() {
     // We need to traverse twice to mark reverted commits, and the first one must not rewrite any object
     private var rewriting = false
 
-    private val changeVectors = mutableMapOf<ChangeVector, ObjectId>()
+    private val changeVectors = mutableMapOf<ChangeVector, MutableSet<ObjectId>>()
 
     private val revertingCommits = mutableSetOf<ObjectId>()
     private val revertedCommits = mutableSetOf<ObjectId>()
@@ -66,58 +66,56 @@ class RevertCommitMarker : RepositoryRewriter() {
             // 多分遅いのでなんか工夫した方がいい
             // あとこれテストどうしよ
             val changeVector = ChangeVector()
-            diffs.forEach { it ->
+            diffs.forEach { diff ->
                 // 両方が対象のソースコードでない場合は無視するんだっけ
-                if ((!it.oldPath.endsWith(".java") || !it.newPath.endsWith(".java")) && !considerAllFiles) {
+                if ((!diff.oldPath.endsWith(".java") || !diff.newPath.endsWith(".java")) && !considerAllFiles) {
                     return@forEach
                 }
 
-                when (it.changeType!!) {
+                when (diff.changeType!!) {
                     DiffEntry.ChangeType.ADD, DiffEntry.ChangeType.COPY -> {
-                        changeVector.addedFiles.add(it.newPath)
+                        changeVector.addedFiles.add(diff.newPath)
                     }
 
                     DiffEntry.ChangeType.DELETE -> {
-                        changeVector.deletedFiles.add(it.oldPath)
+                        changeVector.deletedFiles.add(diff.oldPath)
                     }
 
                     DiffEntry.ChangeType.RENAME -> {
-                        changeVector.deletedFiles.add(it.oldPath)
-                        changeVector.addedFiles.add(it.newPath)
+                        changeVector.deletedFiles.add(diff.oldPath)
+                        changeVector.addedFiles.add(diff.newPath)
                         // 内容の修正が入ることもある?
                     }
 
                     DiffEntry.ChangeType.MODIFY -> {
-                        val fileName = it.newPath
-
-                        val edits = df.toFileHeader(it).toEditList()
+                        val edits = df.toFileHeader(diff).toEditList()
                         edits.forEach { edit ->
                             when (edit.type!!) {
                                 Edit.Type.INSERT -> {
-                                    val newRawText = RawText(source.readBlob(it.newId.toObjectId(), c))
+                                    val newRawText = RawText(source.readBlob(diff.newId.toObjectId(), c))
 
                                     changeVector.addedCodes.addAll((edit.beginB until edit.endB).map {
-                                        "$fileName:${newRawText.getString(it)}"
+                                        "${diff.newPath}:${newRawText.getString(it)}"
                                     })
                                 }
 
                                 Edit.Type.DELETE -> {
-                                    val oldRawText = RawText(source.readBlob(it.oldId.toObjectId(), c))
+                                    val oldRawText = RawText(source.readBlob(diff.oldId.toObjectId(), c))
 
                                     changeVector.deletedCodes.addAll((edit.beginA until edit.endA).map {
-                                        "$fileName:${oldRawText.getString(it)}"
+                                        "${diff.oldPath}:${oldRawText.getString(it)}"
                                     })
                                 }
 
                                 Edit.Type.REPLACE -> {
-                                    val newRawText = RawText(source.readBlob(it.newId.toObjectId(), c))
-                                    val oldRawText = RawText(source.readBlob(it.oldId.toObjectId(), c))
+                                    val newRawText = RawText(source.readBlob(diff.newId.toObjectId(), c))
+                                    val oldRawText = RawText(source.readBlob(diff.oldId.toObjectId(), c))
 
                                     changeVector.addedCodes.addAll((edit.beginB until edit.endB).map {
-                                        "$fileName:${newRawText.getString(it)}"
+                                        "${diff.newPath}:${newRawText.getString(it)}"
                                     })
                                     changeVector.deletedCodes.addAll((edit.beginA until edit.endA).map {
-                                        "$fileName:${oldRawText.getString(it)}"
+                                        "${diff.oldPath}:${oldRawText.getString(it)}"
                                     })
                                 }
 
@@ -132,13 +130,13 @@ class RevertCommitMarker : RepositoryRewriter() {
             // check if this commit reverts previous commit
             val reversedChangeVector = changeVector.reversed()
             if (changeVectors.contains(reversedChangeVector)) {
-                revertedCommits.add(changeVectors[reversedChangeVector]!!)
+                revertedCommits.addAll(changeVectors[reversedChangeVector]!!)
                 revertingCommits.add(commit)
             }
 
             if (changeVector.isNotEmpty()) {
                 // Prevent empty commit being inserted into candidates
-                changeVectors[changeVector] = commit
+                changeVectors.getOrDefault(changeVector, mutableSetOf()).add(commit)
             }
 
             return super.rewriteCommitMessage(message, c)
@@ -206,5 +204,4 @@ data class ChangeVector(
         result = 31 * result + deletedCodes.hashCode()
         return result
     }
-
 }
