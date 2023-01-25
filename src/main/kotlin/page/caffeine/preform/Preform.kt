@@ -32,6 +32,7 @@ import java.util.concurrent.Callable
         Formatter::class,
         PassThrough::class,
         LinebreakNormalizer::class,
+        ExtensionFilter::class,
         LocalVariableInliner::class,
         CommentRemover::class,
         RevertCommitSquasher::class,
