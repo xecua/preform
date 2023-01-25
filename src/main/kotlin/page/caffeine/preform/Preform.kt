@@ -10,7 +10,6 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import page.caffeine.preform.filter.marker.NonEssentialDiffMarker
-import page.caffeine.preform.filter.marker.QuickRemedyCommitMarker
 import page.caffeine.preform.filter.marker.RevertCommitMarker
 import page.caffeine.preform.filter.PassThrough
 import page.caffeine.preform.filter.normalizer.*
@@ -33,7 +32,6 @@ import java.util.concurrent.Callable
         Formatter::class,
         PassThrough::class,
         LinebreakNormalizer::class,
-        QuickRemedyCommitMarker::class,
         LocalVariableInliner::class,
         CommentRemover::class,
         RevertCommitSquasher::class,
