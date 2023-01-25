@@ -1,7 +1,6 @@
 package page.caffeine.preform.filter.restructurer
 
 import jp.ac.titech.c.se.stein.core.Context
-import jp.ac.titech.c.se.stein.core.RefEntry
 import mu.KotlinLogging
 import org.eclipse.jgit.diff.DiffEntry
 import org.eclipse.jgit.diff.DiffFormatter
@@ -21,10 +20,6 @@ import picocli.CommandLine.Command
 class RevertCommitSquasher : RepositoryRewriter() {
     private var previousCommitChangeVector = ChangeVector()
     private var parentCommitIdIfItRevertsParent: RevCommit? = null
-
-    override fun rewriteRefEntry(entry: RefEntry?, c: Context?): RefEntry {
-        return super.rewriteRefEntry(entry, c)
-    }
 
     override fun rewriteParents(parents: Array<out ObjectId>?, c: Context?): Array<ObjectId> {
         val commit = c?.commit
