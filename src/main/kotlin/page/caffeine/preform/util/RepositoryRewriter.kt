@@ -47,6 +47,4 @@ open class RepositoryRewriter : jp.ac.titech.c.se.stein.core.RepositoryRewriter(
 
         cleanUp(c)
     }
-
-    override fun confirmStartRef(ref: Ref?, c: Context?): Boolean = true
 }

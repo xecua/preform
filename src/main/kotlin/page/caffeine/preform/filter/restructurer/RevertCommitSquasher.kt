@@ -1,6 +1,7 @@
 package page.caffeine.preform.filter.restructurer
 
 import jp.ac.titech.c.se.stein.core.Context
+import jp.ac.titech.c.se.stein.core.RefEntry
 import mu.KotlinLogging
 import org.eclipse.jgit.diff.DiffEntry
 import org.eclipse.jgit.diff.DiffFormatter
@@ -27,12 +28,20 @@ class RevertCommitSquasher : RepositoryRewriter() {
         description = ["Consider changes for all kinds of files (Default: only .java files)"]
     )
     var considerAllFiles = false
+    
+    private fun cleanUpState() {
+        previousCommitChangeVector = ChangeVector()
+        parentCommitIdIfItRevertsParent = null
+    }
+
+    override fun rewriteRefEntry(entry: RefEntry?, c: Context?): RefEntry {
+        return super.rewriteRefEntry(entry, c)
+    }
 
     override fun rewriteParents(parents: Array<out ObjectId>?, c: Context?): Array<ObjectId> {
         val commit = c?.commit
         if (commit == null) {
-            parentCommitIdIfItRevertsParent = null
-            previousCommitChangeVector = ChangeVector()
+            cleanUpState()
             return super.rewriteParents(parents, c)
         }
 
@@ -46,14 +55,11 @@ class RevertCommitSquasher : RepositoryRewriter() {
                 }
             }
 
-            parentCommitIdIfItRevertsParent = null
-            previousCommitChangeVector = ChangeVector()
             return newParents.map { commitMapping[it] ?: it }.toTypedArray()
         }
 
         if (commit.parentCount != 1) {
-            parentCommitIdIfItRevertsParent = null
-            previousCommitChangeVector = ChangeVector()
+            cleanUpState()
             return super.rewriteParents(parents, c)
         }
 
