@@ -10,7 +10,6 @@ import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.util.io.DisabledOutputStream
 import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
-import picocli.CommandLine.Option
 
 @Command(name = "RevertCommitMarker", description = ["Mark revert commits."])
 class RevertCommitMarker : RepositoryRewriter() {
@@ -21,12 +20,6 @@ class RevertCommitMarker : RepositoryRewriter() {
 
     private val revertingCommits = mutableSetOf<ObjectId>()
     private val revertedCommits = mutableSetOf<ObjectId>()
-
-    @Option(
-        names = ["--all-files"],
-        description = ["Consider changes for all kinds of files (Default: only .java files)"]
-    )
-    var considerAllFiles = false
 
     override fun rewriteCommits(c: Context?) {
         super.rewriteCommits(c)
@@ -67,11 +60,6 @@ class RevertCommitMarker : RepositoryRewriter() {
             // あとこれテストどうしよ
             val changeVector = ChangeVector()
             diffs.forEach { diff ->
-                // 両方が対象のソースコードでない場合は無視するんだっけ
-                if ((!diff.oldPath.endsWith(".java") || !diff.newPath.endsWith(".java")) && !considerAllFiles) {
-                    return@forEach
-                }
-
                 when (diff.changeType!!) {
                     DiffEntry.ChangeType.ADD, DiffEntry.ChangeType.COPY -> {
                         changeVector.addedFiles.add(diff.newPath)
