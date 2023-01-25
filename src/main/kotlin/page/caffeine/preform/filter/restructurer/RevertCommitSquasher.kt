@@ -41,7 +41,8 @@ class RevertCommitSquasher : RepositoryRewriter() {
     override fun rewriteParents(parents: Array<out ObjectId>?, c: Context?): Array<ObjectId> {
         val commit = c?.commit
         if (commit == null) {
-            cleanUpState()
+            parentCommitIdIfItRevertsParent = null
+            previousCommitChangeVector = ChangeVector()
             return super.rewriteParents(parents, c)
         }
 
@@ -55,11 +56,14 @@ class RevertCommitSquasher : RepositoryRewriter() {
                 }
             }
 
+            parentCommitIdIfItRevertsParent = null
+            previousCommitChangeVector = ChangeVector()
             return newParents.map { commitMapping[it] ?: it }.toTypedArray()
         }
 
         if (commit.parentCount != 1) {
-            cleanUpState()
+            parentCommitIdIfItRevertsParent = null
+            previousCommitChangeVector = ChangeVector()
             return super.rewriteParents(parents, c)
         }
 
@@ -150,7 +154,6 @@ class RevertCommitSquasher : RepositoryRewriter() {
         } else {
             null
         }
-        
         previousCommitChangeVector = currentCommitChangeVector
 
         return super.rewriteParents(parents, c)
