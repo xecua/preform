@@ -13,6 +13,7 @@ import page.caffeine.preform.filter.marker.NonEssentialDiffMarker
 import page.caffeine.preform.filter.marker.RevertCommitMarker
 import page.caffeine.preform.filter.PassThrough
 import page.caffeine.preform.filter.normalizer.*
+import page.caffeine.preform.filter.restructurer.EmptyCommitRemover
 import page.caffeine.preform.filter.restructurer.RevertCommitSquasher
 import picocli.CommandLine.Command
 import picocli.CommandLine.ITypeConverter
@@ -32,6 +33,7 @@ import java.util.concurrent.Callable
         Formatter::class,
         PassThrough::class,
         LinebreakNormalizer::class,
+        EmptyCommitRemover::class,
         ExtensionFilter::class,
         LocalVariableInliner::class,
         CommentRemover::class,
