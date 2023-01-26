@@ -10,16 +10,16 @@ class EmptyCommitRemover : RepositoryRewriter() {
     override fun rewriteParents(parents: Array<out ObjectId>?, c: Context?): Array<ObjectId> {
         return c?.commit?.parents?.map { parent ->
             if (parent.parents?.size != 1) {
-                return@map parent
-            }
-
-            val grandParent = parent.parents[0]
-
-            return@map if (parent.tree == grandParent.tree) {
-                    grandParent
+                commitMapping[parent] ?: parent
             } else {
-                 parent
+                val grandParent = parent.parents[0]
+
+                if (parent.tree == grandParent.tree) {
+                    commitMapping[grandParent] ?: grandParent
+                } else {
+                    commitMapping[parent] ?: parent
+                }
             }
-        }?.toTypedArray() ?: return super.rewriteParents(parents, c)       
+        }?.toTypedArray() ?: return super.rewriteParents(parents, c)
     }
 }
