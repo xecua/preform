@@ -2,14 +2,9 @@ package page.caffeine.preform.filter.restructurer
 
 import jp.ac.titech.c.se.stein.core.Context
 import mu.KotlinLogging
-import org.eclipse.jgit.diff.DiffEntry
-import org.eclipse.jgit.diff.DiffFormatter
-import org.eclipse.jgit.diff.Edit
-import org.eclipse.jgit.diff.RawText
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.revwalk.RevCommit
-import org.eclipse.jgit.util.io.DisabledOutputStream
-import page.caffeine.preform.filter.marker.ChangeVector
+import page.caffeine.preform.util.ChangeVector
 import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 
@@ -62,69 +57,7 @@ class RevertCommitSquasher : RepositoryRewriter() {
             }
         }
 
-        val df = DiffFormatter(DisabledOutputStream.INSTANCE)
-        df.setRepository(sourceRepo)
-        val diffs = df.scan(parentCommit.tree, commit.tree)
-
-        // 多分遅いのでなんか工夫した方がいい
-        // あとこれテストどうしよ
-        val currentCommitChangeVector = ChangeVector()
-        diffs.forEach { diff ->
-            when (diff.changeType!!) {
-                DiffEntry.ChangeType.ADD, DiffEntry.ChangeType.COPY -> {
-                    currentCommitChangeVector.addedFiles.add(diff.newPath)
-                }
-
-                DiffEntry.ChangeType.DELETE -> {
-                    currentCommitChangeVector.deletedFiles.add(diff.oldPath)
-                }
-
-                DiffEntry.ChangeType.RENAME -> {
-                    currentCommitChangeVector.deletedFiles.add(diff.oldPath)
-                    currentCommitChangeVector.addedFiles.add(diff.newPath)
-                    // 内容の修正が入ることもある?
-                }
-
-                DiffEntry.ChangeType.MODIFY -> {
-
-                    val edits = df.toFileHeader(diff).toEditList()
-                    edits.forEach { edit ->
-                        when (edit.type!!) {
-                            Edit.Type.INSERT -> {
-                                val newRawText = RawText(source.readBlob(diff.newId.toObjectId(), c))
-
-                                currentCommitChangeVector.addedCodes.addAll((edit.beginB until edit.endB).map {
-                                    "${diff.newPath}:${newRawText.getString(it)}"
-                                })
-                            }
-
-                            Edit.Type.DELETE -> {
-                                val oldRawText = RawText(source.readBlob(diff.oldId.toObjectId(), c))
-
-                                currentCommitChangeVector.deletedCodes.addAll((edit.beginA until edit.endA).map {
-                                    "${diff.oldPath}:${oldRawText.getString(it)}"
-                                })
-                            }
-
-                            Edit.Type.REPLACE -> {
-                                val newRawText = RawText(source.readBlob(diff.newId.toObjectId(), c))
-                                val oldRawText = RawText(source.readBlob(diff.oldId.toObjectId(), c))
-
-                                currentCommitChangeVector.addedCodes.addAll((edit.beginB until edit.endB).map {
-                                    "${diff.newPath}:${newRawText.getString(it)}"
-                                })
-                                currentCommitChangeVector.deletedCodes.addAll((edit.beginA until edit.endA).map {
-                                    "${diff.oldPath}:${oldRawText.getString(it)}"
-                                })
-                            }
-
-                            Edit.Type.EMPTY -> {}
-                        }
-                    }
-
-                }
-            }
-        }
+        val currentCommitChangeVector = ChangeVector.fromTrees(sourceRepo!!, parentCommit.tree, commit.tree)
 
         // check if this commit reverts previous commit
         parentCommitIdIfItRevertsParent = if (currentCommitChangeVector.reverts(previousCommitChangeVector)) {

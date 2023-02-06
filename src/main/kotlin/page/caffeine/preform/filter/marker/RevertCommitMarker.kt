@@ -2,12 +2,8 @@ package page.caffeine.preform.filter.marker
 
 import jp.ac.titech.c.se.stein.core.Context
 import mu.KotlinLogging
-import org.eclipse.jgit.diff.DiffEntry
-import org.eclipse.jgit.diff.DiffFormatter
-import org.eclipse.jgit.diff.Edit
-import org.eclipse.jgit.diff.RawText
 import org.eclipse.jgit.lib.ObjectId
-import org.eclipse.jgit.util.io.DisabledOutputStream
+import page.caffeine.preform.util.ChangeVector
 import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 
@@ -52,68 +48,7 @@ class RevertCommitMarker : RepositoryRewriter() {
             }
 
             val parentCommit = commit.getParent(0)
-            val df = DiffFormatter(DisabledOutputStream.INSTANCE)
-            df.setRepository(sourceRepo)
-            val diffs = df.scan(parentCommit.tree, commit.tree)
-
-            // 多分遅いのでなんか工夫した方がいい
-            // あとこれテストどうしよ
-            val changeVector = ChangeVector()
-            diffs.forEach { diff ->
-                when (diff.changeType!!) {
-                    DiffEntry.ChangeType.ADD, DiffEntry.ChangeType.COPY -> {
-                        changeVector.addedFiles.add(diff.newPath)
-                    }
-
-                    DiffEntry.ChangeType.DELETE -> {
-                        changeVector.deletedFiles.add(diff.oldPath)
-                    }
-
-                    DiffEntry.ChangeType.RENAME -> {
-                        changeVector.deletedFiles.add(diff.oldPath)
-                        changeVector.addedFiles.add(diff.newPath)
-                        // 内容の修正が入ることもある?
-                    }
-
-                    DiffEntry.ChangeType.MODIFY -> {
-                        val edits = df.toFileHeader(diff).toEditList()
-                        edits.forEach { edit ->
-                            when (edit.type!!) {
-                                Edit.Type.INSERT -> {
-                                    val newRawText = RawText(source.readBlob(diff.newId.toObjectId(), c))
-
-                                    changeVector.addedCodes.addAll((edit.beginB until edit.endB).map {
-                                        "${diff.newPath}:${newRawText.getString(it)}"
-                                    })
-                                }
-
-                                Edit.Type.DELETE -> {
-                                    val oldRawText = RawText(source.readBlob(diff.oldId.toObjectId(), c))
-
-                                    changeVector.deletedCodes.addAll((edit.beginA until edit.endA).map {
-                                        "${diff.oldPath}:${oldRawText.getString(it)}"
-                                    })
-                                }
-
-                                Edit.Type.REPLACE -> {
-                                    val newRawText = RawText(source.readBlob(diff.newId.toObjectId(), c))
-                                    val oldRawText = RawText(source.readBlob(diff.oldId.toObjectId(), c))
-
-                                    changeVector.addedCodes.addAll((edit.beginB until edit.endB).map {
-                                        "${diff.newPath}:${newRawText.getString(it)}"
-                                    })
-                                    changeVector.deletedCodes.addAll((edit.beginA until edit.endA).map {
-                                        "${diff.oldPath}:${oldRawText.getString(it)}"
-                                    })
-                                }
-
-                                Edit.Type.EMPTY -> {}
-                            }
-                        }
-
-                    }
-                }
-            }
+            val changeVector = ChangeVector.fromTrees(sourceRepo!!, parentCommit.tree, commit.tree)
 
             // check if this commit reverts previous commit
             val reversedChangeVector = changeVector.reversed()
@@ -142,54 +77,5 @@ class RevertCommitMarker : RepositoryRewriter() {
 
         val REVERTING_COMMIT_MESSAGE_PATTERN =
             Regex("""^Revert ".*This reverts commit ([0-9a-f]{40}).*""", RegexOption.DOT_MATCHES_ALL)
-    }
-}
-
-data class ChangeVector(
-    val addedFiles: MutableSet<String> = mutableSetOf(),
-    val deletedFiles: MutableSet<String> = mutableSetOf(),
-    val addedCodes: MutableSet<String> = mutableSetOf(),
-    val deletedCodes: MutableSet<String> = mutableSetOf()
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        }
-        if (other !is ChangeVector) {
-            return false
-        }
-        return this.addedFiles == other.addedFiles &&
-                this.deletedFiles == other.deletedFiles &&
-                this.addedCodes == other.addedCodes &&
-                this.deletedCodes == other.deletedCodes
-    }
-
-    fun isEmpty(): Boolean =
-        this.addedFiles.isEmpty() && this.deletedFiles.isEmpty() && this.addedCodes.isEmpty() && this.deletedCodes.isEmpty()
-
-    fun isNotEmpty(): Boolean = !this.isEmpty()
-
-    fun reversed(): ChangeVector = ChangeVector(
-        addedFiles = this.deletedFiles,
-        deletedFiles = this.addedFiles,
-        addedCodes = this.deletedCodes,
-        deletedCodes = this.addedCodes
-    )
-
-    // 全部空だと真になっちゃうのだけ回避
-    fun reverts(other: ChangeVector): Boolean =
-        !(this.isEmpty() && other.isEmpty()) &&
-                this.addedFiles == other.deletedFiles &&
-                this.deletedFiles == other.addedFiles &&
-                this.addedCodes == other.deletedCodes &&
-                this.deletedCodes == other.addedCodes
-
-    // auto-generated
-    override fun hashCode(): Int {
-        var result = addedFiles.hashCode()
-        result = 31 * result + deletedFiles.hashCode()
-        result = 31 * result + addedCodes.hashCode()
-        result = 31 * result + deletedCodes.hashCode()
-        return result
     }
 }
