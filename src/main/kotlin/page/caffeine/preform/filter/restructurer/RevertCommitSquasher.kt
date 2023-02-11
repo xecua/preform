@@ -2,9 +2,8 @@ package page.caffeine.preform.filter.restructurer
 
 import jp.ac.titech.c.se.stein.core.Context
 import mu.KotlinLogging
+import org.eclipse.jgit.lib.Constants
 import org.eclipse.jgit.lib.ObjectId
-import org.eclipse.jgit.revwalk.RevCommit
-import page.caffeine.preform.util.ChangeVector
 import page.caffeine.preform.util.RepositoryRewriter
 import picocli.CommandLine.Command
 
@@ -13,67 +12,90 @@ import picocli.CommandLine.Command
     description = ["Squash reverting and reverted commits", "Currently supporting consecutive pair."]
 )
 class RevertCommitSquasher : RepositoryRewriter() {
-    private var previousCommitChangeVector = ChangeVector()
-    private var parentCommitIdIfItRevertsParent: RevCommit? = null
-
-    override fun rewriteParents(parents: Array<out ObjectId>?, c: Context?): Array<ObjectId> {
-        val commit = c?.commit
-        if (commit == null) {
-            parentCommitIdIfItRevertsParent = null
-            previousCommitChangeVector = ChangeVector()
-            return super.rewriteParents(parents, c)
-        }
-
-        if (parentCommitIdIfItRevertsParent != null) {
-            val newParents = parents!!.flatMap {
-                if (it == parentCommitIdIfItRevertsParent) {
-                    // it is guaranteed that it has only one parent
-                    parentCommitIdIfItRevertsParent!!.getParent(0).parents.toList()
-                } else {
-                    listOf(it)
-                }
+    override fun rewriteParents(parents: Array<out ObjectId>, c: Context?): Array<ObjectId> {
+        return parents.map {
+            val parent = commitMapping[it]
+            if (parent == null) {
+                logger.warn { "Rewritten commit not found: ${it.name} {c}" }
+                return@map it
             }
 
-            parentCommitIdIfItRevertsParent = null
-            previousCommitChangeVector = ChangeVector()
-            return newParents.map { commitMapping[it] ?: it }.toTypedArray()
-        }
+            val parentCommit = targetRepo?.parseCommit(parent)!!
 
-        if (commit.parentCount != 1) {
-            parentCommitIdIfItRevertsParent = null
-            previousCommitChangeVector = ChangeVector()
-            return super.rewriteParents(parents, c)
-        }
-
-        val parentCommit = commit.getParent(0)
-
-        // as same condition as Wen et al. (2022).
-        if (commit.fullMessage != null) {
-            val match = REVERTING_COMMIT_MESSAGE_PATTERN.matchEntire(commit.fullMessage)
-            if (match != null && match.groupValues[1] == parentCommit.name) {
-                parentCommitIdIfItRevertsParent = commit
-                previousCommitChangeVector = ChangeVector()
-                return super.rewriteParents(parents, c)
+            // #parents of the parent must be 1
+            if (parentCommit.parentCount != 1) {
+                return@map parentCommit
             }
-        }
 
-        val currentCommitChangeVector = ChangeVector.fromTrees(sourceRepo!!, parentCommit.tree, commit.tree)
+            // #parents of the grand parent must be 1
+            val grandParentCommit = targetRepo?.parseCommit(parentCommit.getParent(0))!!
+            if (grandParentCommit.parentCount != 1) {
+                return@map parentCommit
+            }
 
-        // check if this commit reverts previous commit
-        parentCommitIdIfItRevertsParent = if (currentCommitChangeVector.reverts(previousCommitChangeVector)) {
-            commit
-        } else {
-            null
-        }
-        previousCommitChangeVector = currentCommitChangeVector
+            val grandGrandParentCommit = targetRepo?.parseCommit(grandParentCommit.getParent(0))!!
 
-        return super.rewriteParents(parents, c)
+            // substitute Wen et al.(2022)'s original condition check with tree id matching
+            return@map if (parentCommit.tree.id == grandGrandParentCommit.tree.id) {
+                grandGrandParentCommit
+            } else {
+                parentCommit
+            }
+
+            // condition 1: commit message
+            // if (REVERTING_COMMIT_MESSAGE_PATTERN.matchEntire(parentCommit.fullMessage)?.groupValues?.get(1) == grandParentCommit.name) {
+            //     return@map grandGrandParentCommit
+            // }
+            //
+            // condition 2: change vector
+            // val grandParentCommitChangeVector =
+            //     ChangeVector.fromTrees(targetRepo!!, grandGrandParentCommit.tree, grandParentCommit.tree)
+            // val parentCommitChangeVector =
+            //     ChangeVector.fromTrees(targetRepo!!, grandParentCommit.tree, parentCommit.tree)
+            //
+            // if (parentCommitChangeVector.reverts(grandParentCommitChangeVector)) {
+            //     return@map grandGrandParentCommit
+            // }
+            // 
+            // return@map parentCommit
+        }.toTypedArray()
     }
+
+    override fun rewriteRefObject(id: ObjectId, type: Int, c: Context?): ObjectId {
+        if (type != Constants.OBJ_COMMIT) {
+            return super.rewriteRefObject(id, type, c)
+        }
+
+        val target = commitMapping[id]
+        if (target == null) {
+            logger.warn { "Rewritten commit not found: ${id.name} {c}" }
+            return id
+        }
+
+        val targetCommit = targetRepo?.parseCommit(target)!!
+        if (targetCommit.parentCount != 1) {
+            return target
+        }
+
+        val targetParentCommit = targetRepo?.parseCommit(targetCommit.getParent(0))!!
+        if (targetParentCommit.parentCount != 1) {
+            return target
+        }
+
+        val targetGrandParentCommit = targetRepo?.parseCommit(targetParentCommit.getParent(0))!!
+
+        return if (targetCommit.tree.id == targetGrandParentCommit.tree.id) {
+            targetGrandParentCommit
+        } else {
+            targetCommit
+        }
+    }
+
 
     companion object {
         private val logger = KotlinLogging.logger {}
 
-        val REVERTING_COMMIT_MESSAGE_PATTERN =
-            Regex("""^Revert ".*This reverts commit ([0-9a-f]{40}).*""", RegexOption.DOT_MATCHES_ALL)
+        // val REVERTING_COMMIT_MESSAGE_PATTERN =
+        //     Regex("""^Revert ".*This reverts commit ([0-9a-f]{40}).*""", RegexOption.DOT_MATCHES_ALL)
     }
 }
