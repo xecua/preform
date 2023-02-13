@@ -48,8 +48,8 @@ class KeywordNormalizer : RepositoryRewriter() {
         parser.setBindingsRecovery(true)
         parser.setStatementsRecovery(true)
         parser.setUnitName("") // setting non-null make resolution work within file
-        val tree = parser.createAST(null) as CompilationUnit 
-        if (tree.problems?.size != 0) {
+        val tree = parser.createAST(null) as CompilationUnit
+        if (tree.problems?.any { it.isError } == true) {
             return content
         }
 

@@ -35,7 +35,7 @@ class TypeNameQualifier : RepositoryRewriter() {
         parser.setStatementsRecovery(true)
         parser.setUnitName("")
         val tree = parser.createAST(null) as CompilationUnit
-        if (tree.problems?.size != 0) {
+        if (tree.problems?.any { it.isError } == true) {
             return content
         }
 

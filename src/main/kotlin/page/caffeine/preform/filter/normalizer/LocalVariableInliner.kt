@@ -32,7 +32,7 @@ class LocalVariableInliner : RepositoryRewriter() {
         val parser = generateParser()
         parser.setSource(content.toCharArray())
         val tree = parser.createAST(null) as CompilationUnit
-        if (tree.problems?.size != 0) {
+        if (tree.problems?.any { it.isError } == true) {
             return content
         }
         val visitor = LocalVariableVisitor(content, tree)
