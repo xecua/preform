@@ -3,13 +3,14 @@ package page.caffeine.preform.filter.normalizer
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class TrivialKeywordTests : FunSpec({
+class KeywordNormalizerTest : FunSpec({
     val it = KeywordNormalizer()
 
     context("invalid cases") {
         test("non-void method") {
             it.rewriteContent(
                 """
+                package main;
                 class Example {
                     int foo() {
                         return 1;
@@ -18,6 +19,7 @@ class TrivialKeywordTests : FunSpec({
                 """.trimIndent()
             ).shouldBe(
                 """
+                package main;
                 class Example {
                     int foo() {
                         return 1;
@@ -30,16 +32,30 @@ class TrivialKeywordTests : FunSpec({
         test("already exist non-empty constructor call") {
             it.rewriteContent(
                 """
-                class Example {
-                    void foo() {
+                package main;
+                class Base {
+                    int i = 0;
+                    Base(int i) {
+                        this.i = i;
+                    }
+                }
+                class Example extends Base {
+                    Example() {
                         super(1);
                     }
                 }
                 """.trimIndent()
             ).shouldBe(
                 """
-                class Example {
-                    void foo() {
+                package main;
+                class Base {
+                    int i = 0;
+                    Base(int i) {
+                        this.i = i;
+                    }
+                }
+                class Example extends Base {
+                    Example() {
                         super(1);
                     }
                 }
@@ -50,6 +66,7 @@ class TrivialKeywordTests : FunSpec({
         test("local variable") {
             it.rewriteContent(
                 """
+                package main;
                 class Example {
                     int i = 0;
                     int foo() {
@@ -60,6 +77,7 @@ class TrivialKeywordTests : FunSpec({
                 """.trimIndent()
             ).shouldBe(
                 """
+                package main;
                 class Example {
                     int i = 0;
                     int foo() {
@@ -73,20 +91,22 @@ class TrivialKeywordTests : FunSpec({
         test("same name field of another class") {
             it.rewriteContent(
                 """
+                package main;
                 class Example {
                     int i = 0;
                     int foo() {
-                        Foo f = new Foo();
+                        Example f = new Example();
                         return f.i;
                     }
                 }
                 """.trimIndent()
             ).shouldBe(
                 """
+                package main;
                 class Example {
                     int i = 0;
                     int foo() {
-                        Foo f = new Foo();
+                        Example f = new Example();
                         return f.i;
                     }
                 }
@@ -96,6 +116,7 @@ class TrivialKeywordTests : FunSpec({
         test("`this` is already exist") {
             it.rewriteContent(
                 """
+                package main;
                 class Example {
                     int i = 0;
                     int foo() {
@@ -105,6 +126,7 @@ class TrivialKeywordTests : FunSpec({
                 """.trimIndent()
             ).shouldBe(
                 """
+                package main;
                 class Example {
                     int i = 0;
                     int foo() {
@@ -119,18 +141,22 @@ class TrivialKeywordTests : FunSpec({
         test("last return in void method") {
             it.rewriteContent(
                 """
+                package main;
                 class Example {
                     void foo() {
                         int foo = 1;
+                        System.out.println(foo);
                         return;
                     }
                 }
                 """.trimIndent()
             ).shouldBe(
                 """
+                package main;
                 class Example {
                     void foo() {
                         int foo = 1;
+                        System.out.println(foo);
                     }
                 }
                 """.trimIndent()
@@ -139,24 +165,28 @@ class TrivialKeywordTests : FunSpec({
         test("last return in void method") {
             it.rewriteContent(
                 """
+                package main;
                 class Example {
                     void foo(boolean flag) {
                         if (flag) {
                             return;
                         }
                         int foo = 1;
+                        System.out.println(foo);
                         return;
                     }
                 }
                 """.trimIndent()
             ).shouldBe(
                 """
+                package main;
                 class Example {
                     void foo(boolean flag) {
                         if (flag) {
                             return;
                         }
                         int foo = 1;
+                        System.out.println(foo);
                     }
                 }
                 """.trimIndent()
@@ -166,20 +196,24 @@ class TrivialKeywordTests : FunSpec({
         test("default constructor call") {
             it.rewriteContent(
                 """
+                package main;
                 class Example {
                     private int foo;
                     Example() {
                         super();
                         this.foo = 2;
+                        System.out.println(foo);
                     }
                 }
                 """.trimIndent()
             ).shouldBe(
                 """
+                package main;
                 class Example {
                     private int foo;
                     Example() {
                         this.foo = 2;
+                        System.out.println(foo);
                     }
                 }
                 """.trimIndent()
@@ -188,6 +222,7 @@ class TrivialKeywordTests : FunSpec({
         test("field access") {
              it.rewriteContent(
                 """
+                package main;
                 class Example {
                     int i = 0;
                     int foo() {
@@ -197,6 +232,7 @@ class TrivialKeywordTests : FunSpec({
                 """.trimIndent()
             ).shouldBe(
                 """
+                package main;
                 class Example {
                     int i = 0;
                     int foo() {
@@ -209,6 +245,7 @@ class TrivialKeywordTests : FunSpec({
         test("method invocation") {
             it.rewriteContent(
                 """
+                package main;
                 class Example {
                     int bar() { return 1; }
                     int foo() {
@@ -218,6 +255,7 @@ class TrivialKeywordTests : FunSpec({
                 """.trimIndent()
             ).shouldBe(
                 """
+                package main;
                 class Example {
                     int bar() { return 1; }
                     int foo() {

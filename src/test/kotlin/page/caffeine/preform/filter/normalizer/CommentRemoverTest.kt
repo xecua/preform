@@ -3,7 +3,7 @@ package page.caffeine.preform.filter.normalizer
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class RemoveCommentTests : FunSpec({
+class CommentRemoverTest : FunSpec({
     val it = CommentRemover()
 
     test("check basic functionality") {
